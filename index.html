@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Physics Random Challenge - SI & Prefix</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Segoe UI',Tahoma,sans-serif;
+}
+.footer{
+    margin-top:40px;
+    text-align:center;
+    color:#64748b;
+    font-size:0.9rem;
+    line-height:1.6;
+}
+
+body.dark .footer{
+    color:#cbd5e1;
+}
+body{
+    min-height:100vh;
+    background:linear-gradient(135deg,#4facfe,#00f2fe);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:20px;
+    transition:0.4s;
+}
+
+body.dark{
+    background:linear-gradient(135deg,#0f172a,#1e293b);
+}
+
+.container{
+    background:white;
+    width:100%;
+    max-width:1100px;
+    border-radius:25px;
+    padding:30px;
+    box-shadow:0 15px 40px rgba(0,0,0,0.2);
+}
+
+body.dark .container{
+    background:#1e293b;
+    color:white;
+}
+
+h1{
+    text-align:center;
+    color:#1f2937;
+    margin-bottom:10px;
+}
+
+body.dark h1{
+    color:white;
+}
+
+.subtitle{
+    text-align:center;
+    color:#64748b;
+    margin-bottom:20px;
+}
+
+body.dark .subtitle{
+    color:#cbd5e1;
+}
+
+/* Timer */
+
+.timer-box{
+    text-align:center;
+    font-size:2rem;
+    font-weight:bold;
+    color:#ef4444;
+    margin-bottom:25px;
+}
+
+body.dark .timer-box{
+    color:#f87171;
+}
+
+.warning{
+    animation:blink 1s infinite;
+}
+
+@keyframes blink{
+    50%{
+        opacity:0.4;
+    }
+}
+
+.cards{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:25px;
+}
+
+.card{
+    background:#f8fafc;
+    border-radius:20px;
+    padding:25px;
+    text-align:center;
+    box-shadow:0 8px 20px rgba(0,0,0,0.08);
+}
+
+body.dark .card{
+    background:#334155;
+}
+
+.card h2{
+    color:#2563eb;
+    margin-bottom:15px;
+}
+
+.counter{
+    color:#64748b;
+    margin-bottom:15px;
+}
+
+body.dark .counter{
+    color:#cbd5e1;
+}
+
+.result{
+    min-height:140px;
+    background:white;
+    border:3px dashed #cbd5e1;
+    border-radius:15px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+    padding:20px;
+    font-size:2rem;
+    font-weight:bold;
+    margin-bottom:20px;
+}
+
+body.dark .result{
+    background:#0f172a;
+    color:white;
+    border-color:#475569;
+}
+
+.show{
+    animation:pop 0.4s;
+}
+
+@keyframes pop{
+    0%{
+        transform:scale(0.7);
+        opacity:0;
+    }
+    100%{
+        transform:scale(1);
+        opacity:1;
+    }
+}
+
+button{
+    border:none;
+    border-radius:12px;
+    padding:14px 22px;
+    font-size:1rem;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+button:hover{
+    transform:translateY(-2px);
+}
+
+.random-btn{
+    background:#2563eb;
+    color:white;
+}
+
+.bottom-buttons{
+    margin-top:30px;
+    display:flex;
+    justify-content:center;
+    gap:15px;
+    flex-wrap:wrap;
+}
+
+.reset-btn{
+    background:#ef4444;
+    color:white;
+}
+
+.dark-btn{
+    background:#111827;
+    color:white;
+}
+
+.full-btn{
+    background:#10b981;
+    color:white;
+}
+
+@media(max-width:768px){
+
+    .cards{
+        grid-template-columns:1fr;
+    }
+
+    .result{
+        font-size:1.5rem;
+    }
+
+}
+</style>
+</head>
+
+<body>
+
+
+<div class="container">
+
+    <h1>🎮 Physics Random Challenge</h1>
+
+    <div class="subtitle">
+        สุ่มหน่วย SI และคำอุปสรรค (ฟิสิกส์ ม.4)
+    </div>
+
+    <div class="timer-box">
+        ⏰ เวลาเหลือ:
+        <span id="timer">30</span>
+        วินาที
+    </div>
+
+    <div class="cards">
+
+        <!-- SI -->
+
+        <div class="card">
+
+            <h2>📏 หน่วย SI พื้นฐาน</h2>
+
+            <div class="counter" id="siCount">
+                เหลือ 7 รายการ
+            </div>
+
+            <div class="result" id="siResult">
+                กดปุ่มเพื่อสุ่ม
+            </div>
+
+            <button
+                class="random-btn"
+                onclick="randomSI()">
+
+                🎲 สุ่มหน่วย SI
+
+            </button>
+
+        </div>
+
+        <!-- Prefix -->
+
+        <div class="card">
+
+            <h2>🔤 คำอุปสรรค (Prefixes)</h2>
+
+            <div class="counter" id="prefixCount">
+                เหลือ 12 รายการ
+            </div>
+
+            <div class="result" id="prefixResult">
+                กดปุ่มเพื่อสุ่ม
+            </div>
+
+            <button
+                class="random-btn"
+                onclick="randomPrefix()">
+
+                🎲 สุ่มคำอุปสรรค
+
+            </button>
+
+        </div>
+
+    </div>
+
+    <div class="bottom-buttons">
+
+        <button
+            class="reset-btn"
+            onclick="resetAll()">
+
+            🔄 รีเซ็ต
+
+        </button>
+
+        <button
+            class="dark-btn"
+            onclick="toggleDarkMode()">
+
+            🌙 Dark Mode
+
+        </button>
+
+        <button
+            class="full-btn"
+            onclick="toggleFullscreen()">
+
+            📺 Full Screen
+
+        </button>
+
+    </div>
+<footer class="footer">
+   <strong> ⚛️ Physics Random SI Unit & Prefix v1.0<br>
+    พัฒนาโดย <strong>ครูสาวิตรี ทีฆะภรณ์</strong>
+</footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+<script>
+
+// =====================
+// ข้อมูล
+// =====================
+
+const originalSI = [
+    "ความยาว",
+    "มวล",
+    "เวลา",
+    "กระแสไฟฟ้า",
+    "อุณหภูมิ",
+    "ปริมาณสาร",
+    "ความเข้มการส่องสว่าง"
+];
+
+const originalPrefixes = [
+    "p",
+    "n",
+    "µ",
+    "m",
+    "c",
+    "d",
+    "da",
+    "h",
+    "k",
+    "M",
+    "G",
+    "T"
+];
+
+let siPool = [...originalSI];
+let prefixPool = [...originalPrefixes];
+
+let timeLeft = 30;
+let timerInterval = null;
+
+// =====================
+// เสียง
+// =====================
+
+function playSound(){
+
+    const audio =
+    new Audio(
+        "https://actions.google.com/sounds/v1/cartoon/pop.ogg"
+    );
+
+    audio.play();
+
+}
+
+function playAlarm(){
+
+    const audio =
+    new Audio(
+        "https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg"
+    );
+
+    audio.play();
+
+}
+
+// =====================
+// Confetti
+// =====================
+
+function celebrate(){
+
+    confetti({
+        particleCount:150,
+        spread:90,
+        origin:{y:0.6}
+    });
+
+}
+
+// =====================
+// Timer
+// =====================
+
+function startTimer(){
+
+    clearInterval(timerInterval);
+
+    timeLeft = 30;
+
+    const timer =
+    document.getElementById("timer");
+
+    timer.innerHTML = 30;
+
+    timer.classList.remove("warning");
+
+    timerInterval = setInterval(()=>{
+
+        timeLeft--;
+
+        timer.innerHTML = timeLeft;
+
+        if(timeLeft <= 10){
+
+            timer.classList.add(
+                "warning"
+            );
+
+        }
+
+        if(timeLeft <= 0){
+
+            clearInterval(
+                timerInterval
+            );
+
+            timer.innerHTML =
+            "หมดเวลา!";
+
+            playAlarm();
+
+        }
+
+    },1000);
+
+}
+
+// =====================
+// สุ่มไม่ซ้ำ
+// =====================
+
+function getRandomItem(pool){
+
+    if(pool.length===0){
+
+        return "หมดแล้ว";
+
+    }
+
+    const index =
+    Math.floor(
+        Math.random()*pool.length
+    );
+
+    const item =
+    pool[index];
+
+    pool.splice(index,1);
+
+    return item;
+
+}
+
+// =====================
+// Update Counter
+// =====================
+
+function updateCounts(){
+
+    document
+    .getElementById("siCount")
+    .innerHTML =
+    `เหลือ ${siPool.length} รายการ`;
+
+    document
+    .getElementById("prefixCount")
+    .innerHTML =
+    `เหลือ ${prefixPool.length} รายการ`;
+
+}
+
+// =====================
+// Animation
+// =====================
+
+function animateResult(id,text){
+
+    const box =
+    document.getElementById(id);
+
+    box.classList.remove(
+        "show"
+    );
+
+    box.innerHTML = text;
+
+    void box.offsetWidth;
+
+    box.classList.add(
+        "show"
+    );
+
+}
+
+// =====================
+// Random SI
+// =====================
+
+function randomSI(){
+
+    const result =
+    getRandomItem(siPool);
+
+    animateResult(
+        "siResult",
+        result
+    );
+
+    playSound();
+
+    startTimer();
+
+    updateCounts();
+
+    if(
+        siPool.length===0
+    ){
+
+        celebrate();
+
+    }
+
+}
+
+// =====================
+// Random Prefix
+// =====================
+
+function randomPrefix(){
+
+    const result =
+    getRandomItem(
+        prefixPool
+    );
+
+    animateResult(
+        "prefixResult",
+        result
+    );
+
+    playSound();
+
+    startTimer();
+
+    updateCounts();
+
+    if(
+        prefixPool.length===0
+    ){
+
+        celebrate();
+
+    }
+
+}
+
+// =====================
+// Reset
+// =====================
+
+function resetAll(){
+
+    siPool =
+    [...originalSI];
+
+    prefixPool =
+    [...originalPrefixes];
+
+    document
+    .getElementById(
+        "siResult"
+    ).innerHTML =
+    "กดปุ่มเพื่อสุ่ม";
+
+    document
+    .getElementById(
+        "prefixResult"
+    ).innerHTML =
+    "กดปุ่มเพื่อสุ่ม";
+
+    clearInterval(
+        timerInterval
+    );
+
+    timeLeft = 30;
+
+    const timer =
+    document
+    .getElementById(
+        "timer"
+    );
+
+    timer.innerHTML =
+    30;
+
+    timer.classList.remove(
+        "warning"
+    );
+
+    updateCounts();
+
+}
+
+// =====================
+// Dark Mode
+// =====================
+
+function toggleDarkMode(){
+
+    document.body
+    .classList.toggle(
+        "dark"
+    );
+
+}
+
+// =====================
+// Fullscreen
+// =====================
+
+function toggleFullscreen(){
+
+    if(
+        !document
+        .fullscreenElement
+    ){
+
+        document
+        .documentElement
+        .requestFullscreen();
+
+    }else{
+
+        document
+        .exitFullscreen();
+
+    }
+
+}
+
+// =====================
+// Keyboard
+// =====================
+
+document
+.addEventListener(
+"keydown",
+
+e=>{
+
+    if(
+        e.code==="Space"
+    ){
+
+        e.preventDefault();
+
+        randomSI();
+
+    }
+
+    if(
+        e.code==="Enter"
+    ){
+
+        randomPrefix();
+
+    }
+
+});
+
+</script>
+
+</body>
+</html>
