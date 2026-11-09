@@ -487,7 +487,7 @@
     if (ok) { SQ.sfx.correct(); xpPop(xp, els.submit); }
     else { SQ.sfx.wrong(); const card = els.feedback.closest('.task-card'); card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake'); }
     els.submit.hidden = true; els.next.hidden = false;
-    updateAttempts(t, els);
+    if (els.attempts) els.attempts.hidden = true;
     $$('.play-stats .stat-pill')[1].textContent = `✅ ${run.results.filter(r => r.ok).length}`;
     $$('.play-stats .stat-pill')[2].textContent = `⚡ ${run.xp} XP`;
     $$('.play-stats .stat-pill')[3].textContent = `💡 ${run.hints}`;
