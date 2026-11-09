@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>SOUND QUEST: ภารกิจพิชิตโลกแห่งเสียง</title>
+<meta name="description" content="เกมการเรียนรู้ฟิสิกส์เรื่องเสียง ม.5 แบบ Science Adventure 8 ด่าน">
+<meta name="theme-color" content="#050b1f">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+
+  <header class="topbar" id="topbar">
+    <button class="brand" data-nav="home" aria-label="หน้าแรก">
+      <span class="brand-mark">◉</span>
+      <span class="brand-text">SOUND<b>QUEST</b></span>
+    </button>
+    <div class="player-chip" id="playerChip" hidden>
+      <span class="avatar sm" id="chipAvatar"></span>
+      <div class="chip-info">
+        <div class="chip-name" id="chipName"></div>
+        <div class="xpbar" title="XP"><div class="xpbar-fill" id="chipXpFill"></div></div>
+        <div class="chip-meta"><span id="chipXp">0 XP</span> · <span id="chipRank"></span> · <span id="chipMedals"></span></div>
+      </div>
+    </div>
+    <nav class="top-actions">
+      <button class="icon-btn" data-nav="map" id="navMap" title="แผนที่ด่าน" hidden>🗺️<span>แผนที่</span></button>
+      <button class="icon-btn" data-nav="summary" id="navSummary" title="สรุปผล" hidden>📊<span>สรุปผล</span></button>
+      <button class="icon-btn" id="sfxBtn" title="เปิด/ปิดเสียงเอฟเฟกต์" aria-pressed="true">🔊<span>เสียง</span></button>
+    </nav>
+  </header>
+
+  <main id="main" class="main" tabindex="-1"></main>
+
+  <div class="modal" id="modal" role="dialog" aria-modal="true" hidden>
+    <div class="modal-box" id="modalBox"></div>
+  </div>
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <footer class="footer">SOUND QUEST v1.0 · ฟิสิกส์ ม.5 เรื่องเสียง · พัฒนาโดย ครูสาวิตรี ทีฆะภรณ์ (KruPung Physics Classroom)</footer>
+
+  <script src="js/config.js"></script>
+  <script src="js/lib.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/levels/level1.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
