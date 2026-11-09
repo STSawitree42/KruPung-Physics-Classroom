@@ -54,3 +54,11 @@ window.addEventListener('message', e => {
 });
 </script>
 ```
+
+---
+
+## 🚀 SOUND QUEST: ภารกิจพิชิตโลกแห่งเสียง (โฟลเดอร์ `sound-quest/`)
+
+เกม Science Adventure 8 ด่าน (คำถาม 102 ข้อ + ภารกิจทดลองแบบโต้ตอบ 13 ภารกิจ) พร้อมระบบ XP เหรียญรางวัล คำใบ้ และปลดล็อกด่าน
+พร้อม Deploy บน Netlify: ลากโฟลเดอร์ `sound-quest` ไปที่ https://app.netlify.com/drop หรือเชื่อม repo โดยตั้ง Base directory = `sound-quest`
+รายละเอียดทั้งหมดอยู่ที่ [`sound-quest/README.md`](sound-quest/README.md)
