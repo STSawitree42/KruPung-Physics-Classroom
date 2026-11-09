@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sound Quest - เกมฟิสิกส์เรื่องเสียง ม.5</title>
+<meta name="description" content="เกมฝึกทักษะฟิสิกส์เรื่องเสียง ม.5: ตอบคำถาม นักสืบบีตส์ และภารกิจจูนเสียง">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg1:#4facfe; --bg2:#00f2fe;
+  --card:#ffffff; --soft:#f1f5f9; --ink:#1f2937; --muted:#64748b; --line:#e2e8f0;
+  --primary:#2563eb; --primary-ink:#ffffff;
+  --good:#10b981; --bad:#ef4444; --warn:#f59e0b; --violet:#7c3aed;
+  --shadow:0 15px 40px rgba(0,0,0,.18);
+}
+body.dark{
+  --bg1:#0f172a; --bg2:#1e293b;
+  --card:#1e293b; --soft:#334155; --ink:#f1f5f9; --muted:#cbd5e1; --line:#475569;
+  --primary:#3b82f6;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:'Kanit','Segoe UI',Tahoma,sans-serif;
+  background:linear-gradient(135deg,var(--bg1),var(--bg2));
+  color:var(--ink); min-height:100vh; padding:16px;
+  transition:background .4s,color .4s;
+}
+.app{max-width:1000px;margin:0 auto;background:var(--card);border-radius:24px;box-shadow:var(--shadow);padding:22px;position:relative;overflow:hidden}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:1.15rem}
+.brand .logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#2563eb,#7c3aed);display:grid;place-items:center;color:#fff;font-size:1.3rem}
+.brand small{display:block;font-weight:400;color:var(--muted);font-size:.8rem}
+.tools{display:flex;gap:6px;flex-wrap:wrap}
+.icon-btn{border:1px solid var(--line);background:var(--soft);color:var(--ink);border-radius:10px;padding:7px 10px;font:inherit;font-size:.85rem;cursor:pointer}
+.icon-btn:hover{filter:brightness(.95)}
+button{font-family:inherit}
+.btn{border:none;border-radius:12px;padding:12px 20px;font-size:1rem;font-weight:600;cursor:pointer;transition:transform .15s,filter .15s;background:var(--primary);color:var(--primary-ink)}
+.btn:hover{transform:translateY(-2px)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn.green{background:var(--good)} .btn.red{background:var(--bad)} .btn.violet{background:var(--violet)} .btn.amber{background:var(--warn);color:#1f2937}
+.btn.ghost{background:var(--soft);color:var(--ink);border:1px solid var(--line)}
+.btn.sm{padding:8px 14px;font-size:.9rem}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.center{text-align:center}
+.muted{color:var(--muted)}
+h1{font-size:1.7rem;line-height:1.3}
+h2{font-size:1.3rem;margin-bottom:8px}
+.screen{display:none;animation:fade .35s}
+.screen.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* Home */
+.hero{border-radius:18px;background:linear-gradient(135deg,#1e3a8a,#6d28d9);color:#fff;padding:20px;position:relative;overflow:hidden}
+.hero p{opacity:.9;margin-top:4px}
+#waveCanvas{width:100%;height:110px;display:block;margin-top:12px;border-radius:12px;background:rgba(255,255,255,.08)}
+.wave-caption{display:flex;justify-content:space-between;font-size:.78rem;opacity:.85;margin-top:6px;gap:8px;flex-wrap:wrap}
+.name-box{margin:16px 0;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.name-box input{flex:1;min-width:180px;padding:12px 14px;border-radius:12px;border:2px solid var(--line);background:var(--soft);color:var(--ink);font:inherit;font-size:1rem}
+.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.mode{background:var(--soft);border-radius:18px;padding:18px;cursor:pointer;border:2px solid transparent;transition:.2s;text-align:left;color:var(--ink);font:inherit}
+.mode:hover{border-color:var(--primary);transform:translateY(-3px)}
+.mode .emoji{font-size:2.2rem}
+.mode h3{margin:6px 0 4px;font-size:1.1rem}
+.mode p{font-size:.88rem;color:var(--muted)}
+.tag{display:inline-block;font-size:.72rem;padding:2px 8px;border-radius:99px;background:var(--primary);color:#fff;margin-top:8px}
+
+/* Topic select */
+.topics{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin:14px 0}
+.topic{background:var(--soft);border:2px solid var(--line);border-radius:14px;padding:14px;cursor:pointer;text-align:left;color:var(--ink);font:inherit;transition:.2s}
+.topic:hover,.topic.sel{border-color:var(--primary);background:color-mix(in srgb,var(--primary) 12%,var(--soft))}
+.topic .ti{font-size:1.6rem}
+.topic b{display:block;margin-top:4px}
+.topic span{font-size:.8rem;color:var(--muted)}
+
+/* Quiz */
+.hud{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.pill{background:var(--soft);border-radius:99px;padding:6px 14px;font-weight:600;font-size:.95rem}
+.hearts{letter-spacing:2px}
+.progress{height:10px;background:var(--soft);border-radius:99px;overflow:hidden;margin-bottom:6px}
+.progress>div{height:100%;background:linear-gradient(90deg,#22c55e,#16a34a);width:0;transition:width .4s}
+.timebar{height:8px;background:var(--soft);border-radius:99px;overflow:hidden;margin-bottom:14px}
+.timebar>div{height:100%;background:linear-gradient(90deg,#f59e0b,#ef4444);width:100%}
+.qcard{background:var(--soft);border-radius:18px;padding:20px}
+.qtopic{font-size:.85rem;color:var(--muted);margin-bottom:6px}
+.qtext{font-size:1.2rem;line-height:1.6;font-weight:500;white-space:pre-line}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.opt{display:flex;gap:10px;align-items:center;text-align:left;padding:14px;border-radius:14px;border:2px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:1.02rem;cursor:pointer;transition:.15s}
+.opt:hover:not(:disabled){border-color:var(--primary);transform:translateY(-2px)}
+.opt .k{flex:none;width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:var(--soft);font-weight:700}
+.opt.correct{border-color:var(--good);background:color-mix(in srgb,var(--good) 18%,var(--card))}
+.opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 18%,var(--card))}
+.opt.gone{opacity:.25}
+.opt:disabled{cursor:default}
+.explain{margin-top:14px;border-radius:14px;padding:14px;background:var(--card);border-left:6px solid var(--primary);display:none;line-height:1.6;white-space:pre-line}
+.explain.show{display:block;animation:fade .3s}
+.explain .verdict{font-weight:700;font-size:1.1rem;margin-bottom:4px}
+.combo{position:absolute;right:20px;top:80px;font-weight:700;color:var(--warn);font-size:1.4rem;pointer-events:none;opacity:0}
+.combo.pop{animation:combo 1s}
+@keyframes combo{0%{opacity:0;transform:scale(.6)}30%{opacity:1;transform:scale(1.2)}100%{opacity:0;transform:translateY(-30px)}}
+.shake{animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* Result */
+.stars{font-size:3rem;letter-spacing:6px;margin:6px 0}
+.bigscore{font-size:3rem;font-weight:700;color:var(--primary)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}
+.stat{background:var(--soft);border-radius:14px;padding:12px;text-align:center}
+.stat b{display:block;font-size:1.4rem}
+.review{margin-top:14px;text-align:left}
+.review details{background:var(--soft);border-radius:12px;padding:10px 14px;margin-bottom:8px}
+.review summary{cursor:pointer;font-weight:500}
+.review .ans{margin-top:6px;white-space:pre-line;line-height:1.6;font-size:.95rem}
+
+/* Labs */
+.lab{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;align-items:start}
+.scope{background:#0b1220;border-radius:16px;padding:10px;position:relative}
+.scope canvas{width:100%;height:200px;display:block}
+.scope .lbl{position:absolute;left:16px;top:10px;color:#93c5fd;font-size:.8rem}
+.panel{background:var(--soft);border-radius:16px;padding:16px}
+.choice-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+.choice-grid .opt{justify-content:center;font-weight:700;font-size:1.2rem}
+.slider{width:100%;accent-color:var(--violet);height:30px}
+.fine{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:6px}
+.meter{font-size:1.1rem;font-weight:600}
+.note{font-size:.85rem;color:var(--muted);line-height:1.5}
+.toggle{display:flex;align-items:center;gap:6px;font-size:.85rem;color:var(--muted);cursor:pointer}
+
+/* Leaderboard */
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left}
+th{color:var(--muted);font-weight:500;font-size:.85rem}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tabs .icon-btn.sel{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+/* Modal */
+.modal{position:fixed;inset:0;background:rgba(15,23,42,.6);display:none;align-items:flex-start;justify-content:center;padding:16px;z-index:50;overflow:auto}
+.modal.show{display:flex}
+.modal .box{background:var(--card);color:var(--ink);border-radius:20px;max-width:760px;width:100%;padding:22px;margin:auto}
+.formula-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.formula{background:var(--soft);border-radius:12px;padding:12px}
+.formula b{display:block;font-size:.85rem;color:var(--muted);font-weight:500}
+.formula .eq{font-size:1.1rem;font-weight:600;margin-top:4px;font-family:'Cambria Math','Times New Roman',serif}
+.formula .eq.th{font-family:inherit}
+
+.footer{margin-top:22px;text-align:center;color:var(--muted);font-size:.85rem;line-height:1.6}
+
+@media (max-width:760px){
+  body{padding:8px}
+  .app{padding:14px;border-radius:18px}
+  .modes{grid-template-columns:1fr}
+  .opts{grid-template-columns:1fr}
+  .lab{grid-template-columns:1fr}
+  .formula-grid{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(3,1fr)}
+  h1{font-size:1.35rem}
+  .qtext{font-size:1.08rem}
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo">🔊</div>
+      <div>Sound Quest<small>เกมฟิสิกส์เรื่องเสียง ม.5</small></div>
+    </div>
+    <div class="tools">
+      <button class="icon-btn" onclick="goHome()" title="หน้าหลัก">🏠 หน้าหลัก</button>
+      <button class="icon-btn" onclick="openFormulas()" title="สรุปสูตร">📘 สูตร</button>
+      <button class="icon-btn" onclick="showLeaderboard()" title="ตารางคะแนน">🏆 คะแนน</button>
+      <button class="icon-btn" id="muteBtn" onclick="toggleMute()" title="เปิด/ปิดเสียงเอฟเฟกต์">🔔</button>
+      <button class="icon-btn" onclick="toggleDark()" title="โหมดมืด">🌙</button>
+      <button class="icon-btn" onclick="toggleFullscreen()" title="เต็มจอ">⛶</button>
+    </div>
+  </div>
+
+  <!-- ============ HOME ============ -->
+  <section class="screen active" id="s-home">
+    <div class="hero">
+      <h1>🎮 Sound Quest: ผจญภัยโลกแห่งเสียง</h1>
+      <p>ฝึกคิด ฝึกฟัง ฝึกคำนวณ เรื่อง “เสียง” ฟิสิกส์ ม.5 ผ่านเกม 3 ภารกิจ</p>
+      <canvas id="waveCanvas" aria-label="ภาพเคลื่อนไหวคลื่นเสียงตามยาว"></canvas>
+      <div class="wave-caption">
+        <span>● อนุภาคอากาศสั่นกลับไปมา “ตามแนว” การเคลื่อนที่ของคลื่น → คลื่นตามยาว</span>
+        <span><b style="color:#fca5a5">แดง</b> = ส่วนอัด &nbsp; <b style="color:#93c5fd">ฟ้า</b> = ส่วนขยาย</span>
+      </div>
+    </div>
+
+    <div class="name-box">
+      <label for="playerName">👤 ชื่อผู้เล่น / เลขที่:</label>
+      <input id="playerName" maxlength="30" placeholder="เช่น ม.5/1 เลขที่ 12 สมชาย">
+    </div>
+
+    <div class="modes">
+      <button class="mode" onclick="openTopics()">
+        <div class="emoji">🧠</div>
+        <h3>ภารกิจที่ 1: Sound Quiz</h3>
+        <p>ตอบคำถาม 10 ข้อ ทั้งแนวคิดและคำนวณ (ตัวเลขสุ่มใหม่ทุกครั้ง) มีเวลาจำกัด 3 หัวใจ และตัวช่วย 50:50</p>
+        <span class="tag">6 หัวข้อ</span>
+      </button>
+      <button class="mode" onclick="startBeats()">
+        <div class="emoji">🎧</div>
+        <h3>ภารกิจที่ 2: นักสืบบีตส์</h3>
+        <p>ฟังเสียง 2 ความถี่ที่ต่างกันเล็กน้อย แล้วนับจำนวนบีตส์ต่อวินาที พร้อมดูกราฟแอมพลิจูด</p>
+        <span class="tag">ใช้ลำโพง/หูฟัง</span>
+      </button>
+      <button class="mode" onclick="startTuning()">
+        <div class="emoji">🎻</div>
+        <h3>ภารกิจที่ 3: จูนเสียงให้ตรง</h3>
+        <p>ปรับความถี่ให้ตรงกับเสียงปริศนา โดยใช้หลักการ “บีตส์หายไป” แบบที่นักดนตรีใช้จูนเครื่องดนตรี</p>
+        <span class="tag">ใช้ลำโพง/หูฟัง</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ============ TOPIC SELECT ============ -->
+  <section class="screen" id="s-topics">
+    <h2>🧠 เลือกหัวข้อที่ต้องการฝึก</h2>
+    <p class="muted">แต่ละรอบมี 10 ข้อ • ข้อละ 45 วินาที • ตอบเร็ว + ตอบถูกต่อเนื่อง ได้โบนัส</p>
+    <div class="topics" id="topicList"></div>
+    <div class="row">
+      <button class="btn ghost" onclick="goHome()">← กลับ</button>
+      <button class="btn green" id="startQuizBtn" onclick="startQuiz()">▶ เริ่มเล่น</button>
+    </div>
+  </section>
+
+  <!-- ============ QUIZ ============ -->
+  <section class="screen" id="s-quiz">
+    <div class="hud">
+      <span class="pill" id="qNum">ข้อ 1/10</span>
+      <span class="pill hearts" id="hearts">❤️❤️❤️</span>
+      <span class="pill">⭐ <span id="score">0</span></span>
+      <span class="pill">⏰ <span id="timeLeft">45</span> s</span>
+    </div>
+    <div class="progress"><div id="progressBar"></div></div>
+    <div class="timebar"><div id="timeBar"></div></div>
+    <div class="combo" id="combo"></div>
+    <div class="qcard" id="qcard">
+      <div class="qtopic" id="qTopic"></div>
+      <div class="qtext" id="qText"></div>
+      <div class="opts" id="opts"></div>
+      <div class="explain" id="explain"></div>
+    </div>
+    <div class="row" style="margin-top:12px;justify-content:space-between">
+      <div class="row">
+        <button class="btn amber sm" id="fiftyBtn" onclick="useFifty()">✂️ ตัวช่วย 50:50</button>
+        <button class="btn ghost sm" onclick="openFormulas()">📘 ดูสูตร</button>
+      </div>
+      <button class="btn" id="nextBtn" onclick="nextQuestion()" style="display:none">ข้อต่อไป →</button>
+    </div>
+  </section>
+
+  <!-- ============ RESULT ============ -->
+  <section class="screen center" id="s-result">
+    <h2 id="resTitle">สรุปผล</h2>
+    <div class="stars" id="resStars"></div>
+    <div class="bigscore" id="resScore">0</div>
+    <div class="muted" id="resRank"></div>
+    <div class="stats" id="resStats"></div>
+    <div class="row" style="justify-content:center">
+      <button class="btn green" id="againBtn">🔁 เล่นอีกครั้ง</button>
+      <button class="btn ghost" onclick="goHome()">🏠 หน้าหลัก</button>
+      <button class="btn violet" onclick="showLeaderboard()">🏆 ตารางคะแนน</button>
+    </div>
+    <div class="review" id="resReview"></div>
+  </section>
+
+  <!-- ============ BEATS ============ -->
+  <section class="screen" id="s-beats">
+    <div class="hud">
+      <span class="pill" id="bRound">รอบ 1/5</span>
+      <span class="pill">⭐ <span id="bScore">0</span></span>
+    </div>
+    <div class="lab">
+      <div>
+        <div class="scope"><span class="lbl">กราฟแอมพลิจูดของเสียงรวม (เส้นแบ่ง = 1 วินาที)</span><canvas id="beatCanvas" width="800" height="260"></canvas></div>
+        <label class="toggle" style="margin-top:8px"><input type="checkbox" id="showGraph" checked> แสดงกราฟ (ปิดเพื่อฝึกฟังอย่างเดียว ได้คะแนน ×2)</label>
+      </div>
+      <div class="panel">
+        <h2>🎧 นักสืบบีตส์</h2>
+        <p class="note">กด “ฟังเสียง” เพื่อเล่นเสียงจากส้อมเสียง 2 อันพร้อมกันเป็นเวลา 5 วินาที เสียงจะ “ดัง-ค่อย” สลับกัน นับว่าดังกี่ครั้งใน 1 วินาที</p>
+        <div class="row" style="margin-top:10px">
+          <button class="btn violet" id="beatPlayBtn" onclick="playBeat()">▶ ฟังเสียง</button>
+        </div>
+        <p style="margin-top:12px;font-weight:600">ความถี่บีตส์เป็นกี่เฮิรตซ์ (ครั้ง/วินาที)?</p>
+        <div class="choice-grid" id="beatChoices"></div>
+        <div class="explain" id="beatExplain"></div>
+        <div class="row" style="margin-top:10px;justify-content:flex-end">
+          <button class="btn" id="beatNext" onclick="nextBeat()" style="display:none">ต่อไป →</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TUNING ============ -->
+  <section class="screen" id="s-tuning">
+    <div class="hud">
+      <span class="pill" id="tRound">รอบ 1/3</span>
+      <span class="pill">⭐ <span id="tScore">0</span></span>
+    </div>
+    <div class="lab">
+      <div>
+        <div class="scope"><span class="lbl">กราฟแอมพลิจูดเมื่อเล่นพร้อมกัน (บีตส์ช้าลง = ใกล้ตรงแล้ว)</span><canvas id="tuneCanvas" width="800" height="260"></canvas></div>
+        <p class="note" style="margin-top:8px">💡 หลักการ: ความถี่บีตส์ f<sub>b</sub> = |f<sub>1</sub> − f<sub>2</sub>| เมื่อความถี่ทั้งสองเท่ากันพอดี บีตส์จะหายไป เสียงจะนิ่งสม่ำเสมอ</p>
+      </div>
+      <div class="panel">
+        <h2>🎻 จูนเสียงให้ตรง</h2>
+        <p class="note">เสียงปริศนามีความถี่ที่ซ่อนไว้ ปรับแถบเลื่อนเพื่อเปลี่ยนความถี่ของเสียงคุณ แล้วกด “เล่นพร้อมกัน” ฟังบีตส์ให้ช้าลงจนหายไป</p>
+        <div class="row" style="margin-top:10px">
+          <button class="btn ghost sm" onclick="tunePlay('target')">🔈 เสียงปริศนา</button>
+          <button class="btn ghost sm" onclick="tunePlay('mine')">🔉 เสียงของฉัน</button>
+          <button class="btn violet sm" id="tuneBothBtn" onclick="tunePlay('both')">🔊 เล่นพร้อมกัน</button>
+        </div>
+        <div style="margin-top:14px">
+          <input type="range" class="slider" id="tuneSlider" min="0" max="100" step="0.1" aria-label="ปรับความถี่">
+          <div class="fine">
+            <button class="icon-btn" onclick="nudge(-5)">−5</button>
+            <button class="icon-btn" onclick="nudge(-1)">−1</button>
+            <button class="icon-btn" onclick="nudge(-0.1)">−0.1</button>
+            <button class="icon-btn" onclick="nudge(0.1)">+0.1</button>
+            <button class="icon-btn" onclick="nudge(1)">+1</button>
+            <button class="icon-btn" onclick="nudge(5)">+5</button>
+          </div>
+          <p class="center meter" style="margin-top:8px" id="tuneReadout">ความถี่ของฉัน: ??? Hz</p>
+        </div>
+        <div class="row" style="margin-top:10px;justify-content:space-between">
+          <button class="btn green" id="tuneSubmit" onclick="submitTune()">✅ ส่งคำตอบ</button>
+          <button class="btn" id="tuneNext" onclick="nextTune()" style="display:none">ต่อไป →</button>
+        </div>
+        <div class="explain" id="tuneExplain"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ LEADERBOARD ============ -->
+  <section class="screen" id="s-board">
+    <h2>🏆 ตารางคะแนนสูงสุด (บันทึกในเครื่องนี้)</h2>
+    <div class="tabs" id="boardTabs"></div>
+    <table><thead><tr><th>#</th><th>ชื่อ</th><th>โหมด</th><th>คะแนน</th><th>วันที่</th></tr></thead><tbody id="boardBody"></tbody></table>
+    <div class="row" style="margin-top:14px">
+      <button class="btn ghost" onclick="goHome()">← กลับ</button>
+      <button class="btn red sm" onclick="clearBoard()">🗑 ล้างตารางคะแนน</button>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <strong>⚛️ Sound Quest v1.0</strong> • ฟิสิกส์ ม.5 เรื่องเสียง<br>
+    พัฒนาโดย <strong>ครูสาวิตรี ทีฆะภรณ์</strong> • KruPung Physics Classroom
+  </footer>
+</div>
+
+<!-- ============ FORMULA MODAL ============ -->
+<div class="modal" id="formulaModal" onclick="if(event.target===this)closeFormulas()">
+  <div class="box">
+    <div class="row" style="justify-content:space-between">
+      <h2>📘 สรุปสูตรเรื่องเสียง</h2>
+      <button class="icon-btn" onclick="closeFormulas()">✕ ปิด</button>
+    </div>
+    <div class="formula-grid">
+      <div class="formula"><b>อัตราเร็วเสียงในอากาศ (T เป็น °C)</b><div class="eq">v = 331 + 0.6T &nbsp;m/s</div></div>
+      <div class="formula"><b>สมการคลื่น</b><div class="eq">v = fλ</div></div>
+      <div class="formula"><b>อัตราเร็วกับอุณหภูมิเคลวิน</b><div class="eq">v₁ / v₂ = √(T₁ / T₂)</div></div>
+      <div class="formula"><b>เสียงสะท้อน (เสียงก้อง) ไป-กลับ</b><div class="eq">2s = vt</div></div>
+      <div class="formula"><b>ความเข้มเสียงจากแหล่งกำเนิดจุด</b><div class="eq">I = P / (4πr²)</div></div>
+      <div class="formula"><b>ระดับความเข้มเสียง (I₀ = 10⁻¹² W/m²)</b><div class="eq">β = 10 log(I / I₀) &nbsp;dB</div></div>
+      <div class="formula"><b>ผลต่างระดับความเข้มเสียง</b><div class="eq">β₂ − β₁ = 10 log(I₂ / I₁)</div></div>
+      <div class="formula"><b>ความถี่บีตส์</b><div class="eq">f<sub>b</sub> = |f₁ − f₂|</div></div>
+      <div class="formula"><b>ท่อปลายปิด 1 ด้าน (ฮาร์มอนิกคี่)</b><div class="eq">L = (2n − 1) λ / 4 ,&nbsp; f₁ = v / 4L</div></div>
+      <div class="formula"><b>ท่อปลายเปิด 2 ด้าน (ทุกฮาร์มอนิก)</b><div class="eq">L = n λ / 2 ,&nbsp; f₁ = v / 2L</div></div>
+      <div class="formula"><b>ระยะระหว่างการสั่นพ้องที่ติดกัน</b><div class="eq">ΔL = λ / 2 &nbsp;→&nbsp; v = 2fΔL</div></div>
+      <div class="formula"><b>ปรากฏการณ์ดอปเพลอร์</b><div class="eq">f′ = f (v ± v<sub>o</sub>) / (v ∓ v<sub>s</sub>)</div></div>
+      <div class="formula"><b>เลขมัค และมุมกรวยคลื่นกระแทก</b><div class="eq">M = v<sub>s</sub> / v ,&nbsp; sin θ = v / v<sub>s</sub></div></div>
+      <div class="formula"><b>ช่วงความถี่ที่มนุษย์ได้ยิน</b><div class="eq th">20 – 20,000 Hz</div></div>
+    </div>
+    <p class="note" style="margin-top:12px">ดอปเพลอร์: ผู้ฟังเคลื่อนที่เข้าหาแหล่งกำเนิด ใช้ +v<sub>o</sub> • แหล่งกำเนิดเคลื่อนที่เข้าหาผู้ฟัง ใช้ −v<sub>s</sub> (เข้าหากัน ความถี่ที่ได้ยินสูงขึ้น)</p>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* =========================================================
+   Utilities
+   ========================================================= */
+const $ = s => document.querySelector(s);
+const rnd = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+function shuffle(a){ a=[...a]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+const SUP = {'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+const sup = n => String(n).split('').map(c=>SUP[c]||c).join('');
+const sig = (x,p=3) => Number(Number(x).toPrecision(p));
+function sci(x,p=3){
+  let e = Math.floor(Math.log10(Math.abs(x)));
+  let m = sig(x/Math.pow(10,e),p);
+  if(Math.abs(m)>=10){ m=sig(m/10,p); e++; }
+  return (m===1 ? '' : m+' × ') + '10' + sup(e);
+}
+function fmtN(x,p=3){
+  const ax=Math.abs(x);
+  if(ax!==0 && (ax<0.01 || ax>=1e6)) return sci(x,p);
+  return sig(x,p).toLocaleString('en-US',{maximumFractionDigits:4});
+}
+const u = (p,unit) => x => fmtN(x,p) + (unit ? ' '+unit : '');
+const pw = n => n===0 ? '1' : '10'+sup(n);
+const store = {
+  get(k,d){ try{ const v=localStorage.getItem(k); return v===null?d:JSON.parse(v);}catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+};
+
+/* Build a numeric multiple-choice question */
+function numQ(q, val, wrongVals, f, explain){
+  const c = f(val); const opts=[c];
+  for(const w of wrongVals){
+    if(opts.length>=4) break;
+    if(!isFinite(w) || w<=0) continue;
+    const s=f(w); if(!opts.includes(s)) opts.push(s);
+  }
+  for(const m of shuffle([2,0.5,1.5,0.75,3,1.25,0.25,4,0.8,1.1])){
+    if(opts.length>=4) break;
+    const s=f(val*m); if(!opts.includes(s)) opts.push(s);
+  }
+  return {q, options:opts, correct:c, explain};
+}
+
+/* =========================================================
+   Content
+   ========================================================= */
+const TOPICS = {
+  nature:   {name:'ธรรมชาติของเสียง',            icon:'🌊', desc:'การเกิดเสียง คลื่นตามยาว สมบัติของคลื่นเสียง'},
+  speed:    {name:'อัตราเร็วเสียง',                icon:'⚡', desc:'v = 331 + 0.6T, v = fλ, เสียงสะท้อน'},
+  intensity:{name:'ความเข้มเสียง & เดซิเบล',      icon:'📢', desc:'I = P/4πr², β = 10 log(I/I₀), มลพิษทางเสียง'},
+  pitch:    {name:'ระดับเสียง คุณภาพเสียง & บีตส์', icon:'🎵', desc:'ความถี่ การได้ยิน ฮาร์มอนิก บีตส์'},
+  resonance:{name:'การสั่นพ้อง & คลื่นนิ่ง',      icon:'🎺', desc:'ท่อปลายปิด/ปลายเปิด หาอัตราเร็วเสียง'},
+  doppler:  {name:'ดอปเพลอร์ & คลื่นกระแทก',     icon:'🚑', desc:'f′ ของแหล่งกำเนิด/ผู้ฟังที่เคลื่อนที่, เลขมัค'},
+};
+
+/* Concept questions: a[0] is the correct answer */
+const CONCEPTS = [
+  // ---------- nature ----------
+  {t:'nature', q:'เสียงจัดเป็นคลื่นประเภทใด', a:['คลื่นกลตามยาว','คลื่นกลตามขวาง','คลื่นแม่เหล็กไฟฟ้า','คลื่นแม่เหล็กไฟฟ้าตามยาว'],
+   e:'เสียงต้องอาศัยตัวกลางในการเคลื่อนที่ (คลื่นกล) และอนุภาคตัวกลางสั่นในแนวเดียวกับทิศการเคลื่อนที่ของคลื่น จึงเป็นคลื่นตามยาว'},
+  {t:'nature', q:'เสียงไม่สามารถเคลื่อนที่ผ่านบริเวณใด', a:['สุญญากาศ','น้ำทะเล','แท่งเหล็ก','อากาศร้อน'],
+   e:'เสียงเป็นคลื่นกล ต้องมีอนุภาคตัวกลางส่งต่อพลังงาน ในสุญญากาศไม่มีตัวกลาง เสียงจึงเคลื่อนที่ผ่านไม่ได้'},
+  {t:'nature', q:'โดยทั่วไป เสียงเคลื่อนที่ได้เร็วที่สุดในตัวกลางใด', a:['ของแข็ง เช่น เหล็ก','ของเหลว เช่น น้ำ','แก๊ส เช่น อากาศ','สุญญากาศ'],
+   e:'โดยทั่วไปอัตราเร็วเสียงในของแข็ง > ของเหลว > แก๊ส เช่น ในเหล็ก ≈ 5,000 m/s ในน้ำ ≈ 1,500 m/s ในอากาศ ≈ 340 m/s'},
+  {t:'nature', q:'บริเวณ “ส่วนอัด” ของคลื่นเสียง ความดันอากาศเป็นอย่างไรเมื่อเทียบกับความดันปกติ', a:['สูงกว่าปกติ','ต่ำกว่าปกติ','เท่ากับความดันปกติ','เป็นศูนย์'],
+   e:'ส่วนอัด (compression) อนุภาคอากาศอยู่ชิดกัน ความดันสูงกว่าปกติ ส่วนขยาย (rarefaction) ความดันต่ำกว่าปกติ'},
+  {t:'nature', q:'คลื่นการกระจัดของอนุภาคอากาศกับคลื่นความดันของเสียง มีเฟสต่างกันเท่าใด', a:['90° (π/2 เรเดียน)','0°','180° (π เรเดียน)','360° (2π เรเดียน)'],
+   e:'ตำแหน่งที่การกระจัดเป็นศูนย์ ความดันเปลี่ยนแปลงมากที่สุด และตำแหน่งที่การกระจัดมากที่สุด ความดันเท่าความดันปกติ คลื่นทั้งสองจึงมีเฟสต่างกัน 90°'},
+  {t:'nature', q:'ในเวลากลางคืนเรามักได้ยินเสียงจากที่ไกล ๆ ได้ชัดกว่าเวลากลางวัน เป็นผลจากปรากฏการณ์ใด', a:['การหักเหของเสียง','การสะท้อนของเสียง','การเลี้ยวเบนของเสียง','การสั่นพ้องของเสียง'],
+   e:'กลางคืนอากาศใกล้พื้นเย็นกว่าอากาศด้านบน เสียงในอากาศเย็นเคลื่อนที่ช้ากว่า คลื่นเสียงจึงหักเหโค้งกลับลงสู่พื้น ทำให้ได้ยินไกล'},
+  {t:'nature', q:'เราได้ยินเสียงคนพูดจากอีกด้านของมุมตึก แม้จะมองไม่เห็นตัวผู้พูด เป็นผลจากปรากฏการณ์ใด', a:['การเลี้ยวเบนของเสียง','การหักเหของเสียง','การแทรกสอดของเสียง','ปรากฏการณ์ดอปเพลอร์'],
+   e:'เสียงมีความยาวคลื่นใกล้เคียงกับขนาดของสิ่งกีดขวาง (ประตู มุมตึก) จึงเลี้ยวเบนอ้อมสิ่งกีดขวางได้ดี'},
+  {t:'nature', q:'เดินผ่านหน้าลำโพง 2 ตัวที่ให้เสียงความถี่เดียวกัน แล้วได้ยินเสียง ดัง-ค่อย สลับกันตามตำแหน่ง เป็นผลจากปรากฏการณ์ใด', a:['การแทรกสอดของเสียง','การสะท้อนของเสียง','การหักเหของเสียง','บีตส์'],
+   e:'คลื่นเสียงจากแหล่งกำเนิดอาพันธ์ 2 แหล่งแทรกสอดกัน ตำแหน่งที่แทรกสอดแบบเสริมได้ยินเสียงดัง แบบหักล้างได้ยินเสียงค่อย (บีตส์จะเกิดเมื่อความถี่ต่างกันเล็กน้อย และดัง-ค่อยตามเวลา)'},
+  {t:'nature', q:'หูของคนจะแยกเสียงสะท้อนออกจากเสียงเดิมได้ เมื่อเสียงทั้งสองมาถึงหูห่างกันอย่างน้อยกี่วินาที และระยะห่างจากผนังน้อยที่สุดเป็นเท่าใด (v = 340 m/s)', a:['0.1 s และ 17 m','0.1 s และ 34 m','1 s และ 340 m','0.01 s และ 1.7 m'],
+   e:'หูแยกเสียงได้เมื่อห่างกัน ≥ 0.1 s เสียงเดินทางไป-กลับ 2s = vt = 340 × 0.1 = 34 m ดังนั้น s = 17 m'},
+  // ---------- speed ----------
+  {t:'speed', q:'เมื่ออุณหภูมิของอากาศสูงขึ้น อัตราเร็วเสียงในอากาศจะเป็นอย่างไร', a:['เพิ่มขึ้น','ลดลง','คงตัว','เป็นศูนย์'],
+   e:'v = 331 + 0.6T อุณหภูมิสูงขึ้น 1 °C อัตราเร็วเสียงเพิ่มขึ้นประมาณ 0.6 m/s'},
+  {t:'speed', q:'เมื่อคลื่นเสียงเคลื่อนที่จากอากาศเข้าสู่น้ำ ปริมาณใดของคลื่นเสียง “ไม่เปลี่ยน”', a:['ความถี่','อัตราเร็ว','ความยาวคลื่น','ทั้งอัตราเร็วและความยาวคลื่น'],
+   e:'ความถี่ขึ้นกับแหล่งกำเนิดเท่านั้น จึงคงเดิม แต่อัตราเร็วและความยาวคลื่นเปลี่ยนตามตัวกลาง (v = fλ)'},
+  {t:'speed', q:'อัตราเร็วเสียงในอากาศแปรผันตรงกับปริมาณใด', a:['รากที่สองของอุณหภูมิเคลวิน','อุณหภูมิเซลเซียส','กำลังสองของอุณหภูมิเคลวิน','ความถี่ของเสียง'],
+   e:'v ∝ √T (T เป็นเคลวิน) จึงได้ v₁/v₂ = √(T₁/T₂) สูตร v = 331 + 0.6T เป็นสูตรประมาณสำหรับ T เป็น °C'},
+  {t:'speed', q:'ถ้าเพิ่มความถี่ของเสียงในอากาศเป็น 2 เท่า (อุณหภูมิคงเดิม) ความยาวคลื่นจะเป็นอย่างไร', a:['ลดลงเหลือครึ่งหนึ่ง','เพิ่มเป็น 2 เท่า','เท่าเดิม','เพิ่มเป็น 4 เท่า'],
+   e:'อัตราเร็วเสียงขึ้นกับตัวกลาง (คงที่) จาก v = fλ เมื่อ f เพิ่ม 2 เท่า λ จึงลดลงครึ่งหนึ่ง'},
+  // ---------- intensity ----------
+  {t:'intensity', q:'ความเข้มเสียงน้อยที่สุดที่หูคนปกติเริ่มได้ยิน (I₀) มีค่าเท่าใด', a:['10⁻¹² W/m²','1 W/m²','10⁻⁶ W/m²','10¹² W/m²'],
+   e:'I₀ = 10⁻¹² W/m² คิดเป็น 0 dB ส่วนความเข้มเสียงประมาณ 1 W/m² (120 dB) เป็นขีดเริ่มเจ็บปวด'},
+  {t:'intensity', q:'ความดังของเสียงที่หูรับรู้ ขึ้นอยู่กับปริมาณใดโดยตรง', a:['ความเข้มเสียง (แอมพลิจูด)','ความถี่ของเสียง','ความยาวคลื่นของเสียง','ชนิดของแหล่งกำเนิด'],
+   e:'เสียงดัง-ค่อย ขึ้นกับความเข้มเสียง ซึ่งขึ้นกับแอมพลิจูดของคลื่น ส่วนเสียงสูง-ต่ำ ขึ้นกับความถี่'},
+  {t:'intensity', q:'ถ้าระยะห่างจากแหล่งกำเนิดเสียงเพิ่มขึ้นเป็น 2 เท่า ความเข้มเสียงจะเป็นอย่างไร', a:['ลดลงเหลือ 1/4 เท่า','ลดลงเหลือ 1/2 เท่า','เท่าเดิม','ลดลงเหลือ 1/8 เท่า'],
+   e:'I = P/(4πr²) ⇒ I ∝ 1/r² เมื่อ r เพิ่ม 2 เท่า I ลดลง 2² = 4 เท่า'},
+  {t:'intensity', q:'ตามมาตรฐานความปลอดภัยในการทำงาน ผู้ปฏิบัติงานไม่ควรได้รับเสียงที่มีระดับเสียงเฉลี่ยตลอด 8 ชั่วโมงเกินเท่าใด', a:['85 dB(A)','40 dB(A)','60 dB(A)','140 dB(A)'],
+   e:'ระดับเสียงเฉลี่ย 8 ชั่วโมงไม่ควรเกิน 85 dB(A) ถ้าดังกว่านี้ต้องลดเวลาที่สัมผัสเสียงหรือใช้อุปกรณ์ป้องกันเสียง เช่น ที่อุดหู ที่ครอบหู'},
+  {t:'intensity', q:'การฟังเพลงผ่านหูฟังเสียงดังเป็นเวลานาน ๆ เสี่ยงต่ออันตรายข้อใดมากที่สุด', a:['หูตึงหรือสูญเสียการได้ยินถาวร','สายตาสั้น','เสียงแหบ','ปวดกล้ามเนื้อคอ'],
+   e:'เสียงดังมากเป็นเวลานานทำลายเซลล์ขนในหูชั้นใน (คอเคลีย) ทำให้การได้ยินเสื่อมแบบถาวร จัดเป็นมลพิษทางเสียง'},
+  // ---------- pitch ----------
+  {t:'pitch', q:'ระดับเสียง (เสียงสูง-ต่ำ) ขึ้นอยู่กับปริมาณใด', a:['ความถี่','แอมพลิจูด','ความเข้มเสียง','อัตราเร็วเสียง'],
+   e:'ความถี่สูง → เสียงสูง (แหลม) ความถี่ต่ำ → เสียงต่ำ (ทุ้ม)'},
+  {t:'pitch', q:'ช่วงความถี่ของเสียงที่หูมนุษย์โดยทั่วไปได้ยิน คือข้อใด', a:['20 – 20,000 Hz','2 – 2,000 Hz','200 – 200,000 Hz','20,000 – 200,000 Hz'],
+   e:'มนุษย์ได้ยินประมาณ 20 Hz ถึง 20 kHz ต่ำกว่า 20 Hz เรียกอินฟราซาวด์ สูงกว่า 20 kHz เรียกอัลตราซาวด์'},
+  {t:'pitch', q:'ค้างคาวใช้หาตำแหน่งเหยื่อ และแพทย์ใช้ตรวจทารกในครรภ์ เป็นเสียงประเภทใด', a:['อัลตราซาวด์ (> 20,000 Hz)','อินฟราซาวด์ (< 20 Hz)','เสียงที่หูได้ยิน (20–20,000 Hz)','คลื่นแม่เหล็กไฟฟ้า'],
+   e:'อัลตราซาวด์มีความยาวคลื่นสั้น สะท้อนจากวัตถุขนาดเล็กได้ดี จึงใช้ในโซนาร์ การหาตำแหน่งของค้างคาว และการตรวจทางการแพทย์'},
+  {t:'pitch', q:'ไวโอลินและฟลุตเล่นโน้ตเดียวกัน (ความถี่มูลฐานเท่ากัน) แต่ฟังแล้วแยกออกว่าเป็นเครื่องดนตรีต่างชนิดกัน เพราะสิ่งใดต่างกัน', a:['คุณภาพเสียง (จำนวนและความเข้มของฮาร์มอนิก)','ความถี่มูลฐาน','อัตราเร็วเสียง','ความยาวคลื่นของความถี่มูลฐาน'],
+   e:'เครื่องดนตรีแต่ละชนิดมีฮาร์มอนิกปนอยู่ต่างกัน รูปคลื่นจึงต่างกัน เรียกว่า “คุณภาพเสียง” (timbre)'},
+  {t:'pitch', q:'บีตส์ (beats) เกิดจากปรากฏการณ์ใด', a:['การแทรกสอดของคลื่นเสียง 2 ขบวนที่มีความถี่ต่างกันเล็กน้อย','การสะท้อนของเสียงจากผนัง','การหักเหของเสียงเมื่ออุณหภูมิเปลี่ยน','การสั่นพ้องของอากาศในท่อ'],
+   e:'คลื่นสองขบวนที่ความถี่ใกล้กันแทรกสอดกัน ทำให้แอมพลิจูดรวมเพิ่ม-ลดเป็นจังหวะ ได้ยินเสียง ดัง-ค่อย สลับกัน f_b = |f₁ − f₂|'},
+  {t:'pitch', q:'โดยทั่วไป หูคนจะรับรู้บีตส์ได้ชัดเจน เมื่อความถี่ของเสียงทั้งสองต่างกันไม่เกินประมาณกี่เฮิรตซ์', a:['7 Hz','70 Hz','700 Hz','20 Hz'],
+   e:'หากความถี่ต่างกันมากกว่าประมาณ 7 Hz เสียงดัง-ค่อยจะเกิดถี่เกินกว่าที่หูแยกเป็นจังหวะได้'},
+  {t:'pitch', q:'เสียงที่สูงกว่าเดิม 1 อ็อกเทฟ มีความถี่เป็นกี่เท่าของเสียงเดิม', a:['2 เท่า','1.5 เท่า','8 เท่า','12 เท่า'],
+   e:'เสียงสูงขึ้น 1 อ็อกเทฟ ความถี่เพิ่มเป็น 2 เท่า เช่น 440 Hz → 880 Hz'},
+  // ---------- resonance ----------
+  {t:'resonance', q:'ท่อปลายปิดด้านหนึ่ง (อีกด้านเปิด) จะเกิดการสั่นพ้องได้ที่ฮาร์มอนิกใดบ้าง', a:['เฉพาะฮาร์มอนิกลำดับคี่ (1, 3, 5, …)','เฉพาะฮาร์มอนิกลำดับคู่ (2, 4, 6, …)','ทุกฮาร์มอนิก (1, 2, 3, …)','เฉพาะฮาร์มอนิกที่ 1'],
+   e:'ปลายปิดเป็นบัพการกระจัด ปลายเปิดเป็นปฏิบัพ ความยาวท่อจึงเป็น λ/4, 3λ/4, 5λ/4 … ⇒ f = (2n−1)v/4L เฉพาะฮาร์มอนิกคี่'},
+  {t:'resonance', q:'ที่ปลายปิดของท่อเรโซแนนซ์ อนุภาคอากาศมีการกระจัดอย่างไร', a:['เป็นบัพ (การกระจัดเป็นศูนย์)','เป็นปฏิบัพ (การกระจัดมากที่สุด)','การกระจัดเท่ากับครึ่งหนึ่งของแอมพลิจูด','ขึ้นอยู่กับความถี่'],
+   e:'อากาศที่ติดผนังปิดเคลื่อนที่ไม่ได้ ⇒ บัพการกระจัด (แต่เป็นปฏิบัพของความดัน)'},
+  {t:'resonance', q:'ในการทดลองหาตำแหน่งการสั่นพ้องในหลอดเรโซแนนซ์ ระยะห่างระหว่างตำแหน่งการสั่นพ้อง 2 ครั้งที่อยู่ติดกัน เท่ากับเท่าใด', a:['λ/2','λ/4','λ','2λ'],
+   e:'การสั่นพ้องเกิดที่ L = λ/4, 3λ/4, 5λ/4 … ระยะห่างระหว่างตำแหน่งที่ติดกัน = λ/2 จึงหาอัตราเร็วเสียงได้จาก v = 2fΔL'},
+  {t:'resonance', q:'นักร้องเปล่งเสียงที่ความถี่หนึ่งแล้วแก้วไวน์สั่นแรงจนแตก เป็นผลจากปรากฏการณ์ใด', a:['การสั่นพ้อง','การเลี้ยวเบน','บีตส์','ปรากฏการณ์ดอปเพลอร์'],
+   e:'เมื่อความถี่ของเสียงตรงกับความถี่ธรรมชาติของแก้ว แก้วจะสั่นพ้อง แอมพลิจูดเพิ่มขึ้นมากจนแตก'},
+  {t:'resonance', q:'ท่อปลายเปิดทั้งสองด้าน จะเกิดการสั่นพ้องได้ที่ฮาร์มอนิกใดบ้าง', a:['ทุกฮาร์มอนิก (1, 2, 3, …)','เฉพาะฮาร์มอนิกคี่','เฉพาะฮาร์มอนิกคู่','ไม่เกิดการสั่นพ้อง'],
+   e:'ปลายเปิดทั้งสองด้านเป็นปฏิบัพ L = nλ/2 ⇒ f = nv/2L เกิดได้ทุกฮาร์มอนิก'},
+  // ---------- doppler ----------
+  {t:'doppler', q:'รถพยาบาลเปิดไซเรนวิ่ง “เข้าหา” ผู้ฟังที่ยืนนิ่ง ผู้ฟังจะได้ยินเสียงอย่างไร', a:['ความถี่สูงกว่าที่ไซเรนปล่อยออกมา','ความถี่ต่ำกว่าที่ไซเรนปล่อยออกมา','ความถี่เท่าเดิมแต่ดังขึ้น','ความถี่เท่าเดิมแต่ค่อยลง'],
+   e:'แหล่งกำเนิดเคลื่อนที่เข้าหา หน้าคลื่นด้านหน้าอัดชิดกัน λ สั้นลง ผู้ฟังจึงได้ยินความถี่สูงขึ้น (ปรากฏการณ์ดอปเพลอร์)'},
+  {t:'doppler', q:'เมื่อแหล่งกำเนิดเสียงเคลื่อนที่ ความยาวคลื่นของเสียง “ด้านหลัง” แหล่งกำเนิดจะเป็นอย่างไร', a:['ยาวขึ้น','สั้นลง','เท่าเดิม','เป็นศูนย์'],
+   e:'ด้านหลังแหล่งกำเนิด หน้าคลื่นอยู่ห่างกันมากขึ้น λ ยาวขึ้น ความถี่ที่ผู้ฟังด้านหลังได้ยินจึงต่ำลง'},
+  {t:'doppler', q:'เครื่องบินบินเร็วกว่าเสียง ทำให้เกิดเสียงดังคล้ายฟ้าผ่าที่พื้นดิน ปรากฏการณ์นี้เรียกว่าอะไร', a:['ซอนิกบูม (คลื่นกระแทก)','บีตส์','การสั่นพ้อง','เสียงก้อง'],
+   e:'เมื่อ v_s > v หน้าคลื่นซ้อนกันเป็นรูปกรวย เกิดคลื่นกระแทก (shock wave) เมื่อมาถึงผู้ฟังจะได้ยินเสียงดังมาก เรียกว่าซอนิกบูม'},
+  {t:'doppler', q:'เครื่องบินมีเลขมัค 2 มุมครึ่งหนึ่งของยอดกรวยคลื่นกระแทก (θ) เป็นเท่าใด', a:['30°','45°','60°','90°'],
+   e:'sin θ = v/v_s = 1/M = 1/2 ⇒ θ = 30°'},
+];
+
+/* Calculation generators: random numbers each time */
+const GENS = [
+  // ---------- speed ----------
+  {t:'speed', g(){ const T=rnd(10,40), v=331+0.6*T;
+    return numQ(`อากาศมีอุณหภูมิ ${T} °C อัตราเร็วเสียงในอากาศมีค่าประมาณเท่าใด`, v,
+      [331+T, 331-0.6*T, 331+0.6*(T+273)], u(4,'m/s'),
+      `v = 331 + 0.6T\n= 331 + 0.6(${T})\n= ${fmtN(v,4)} m/s`); }},
+  {t:'speed', g(){ const T=pick([10,15,20,25,30,35]), v=331+0.6*T;
+    return numQ(`วัดอัตราเร็วเสียงในอากาศได้ ${fmtN(v,4)} m/s อุณหภูมิของอากาศขณะนั้นเป็นเท่าใด`, T,
+      [(v-331)*0.6, v-331, T+273], u(3,'°C'),
+      `จาก v = 331 + 0.6T\n${fmtN(v,4)} = 331 + 0.6T\nT = ${fmtN(v-331,3)} / 0.6 = ${T} °C`); }},
+  {t:'speed', g(){ const f=pick([170,200,250,340,425,500,680,850,1000,1360,1700]), lam=340/f;
+    return numQ(`ส้อมเสียงความถี่ ${f} Hz สั่นในอากาศซึ่งเสียงมีอัตราเร็ว 340 m/s ความยาวคลื่นเสียงเป็นเท่าใด`, lam,
+      [f/340, 2*lam, lam/2], u(3,'m'),
+      `v = fλ ⇒ λ = v/f\nλ = 340 / ${f} = ${fmtN(lam)} m`); }},
+  {t:'speed', g(){ const lam=pick([0.17,0.25,0.34,0.5,0.68,0.85,1.7]), f=340/lam;
+    return numQ(`เสียงในอากาศมีความยาวคลื่น ${lam} m ถ้าอัตราเร็วเสียง 340 m/s เสียงนี้มีความถี่เท่าใด`, f,
+      [340*lam, 2*f, f/2], u(3,'Hz'),
+      `f = v/λ = 340 / ${lam} = ${fmtN(f)} Hz`); }},
+  {t:'speed', g(){ const t=pick([0.4,0.5,0.6,0.8,1,1.2,1.5,2,2.5,3]), d=170*t;
+    return numQ(`ตะโกนหน้าหน้าผา แล้วได้ยินเสียงสะท้อนกลับมาหลังจากตะโกน ${t} s ถ้าอัตราเร็วเสียง 340 m/s หน้าผาอยู่ห่างเท่าใด`, d,
+      [340*t, 85*t, 340/t], u(3,'m'),
+      `เสียงเดินทางไป-กลับ ⇒ 2s = vt\n2s = 340 × ${t}\ns = ${fmtN(d)} m`); }},
+  {t:'speed', g(){ const t=rnd(2,9), d=340*t;
+    return numQ(`เห็นฟ้าแลบ แล้วอีก ${t} s จึงได้ยินเสียงฟ้าร้อง ถ้าอัตราเร็วเสียง 340 m/s (แสงมาถึงเกือบทันที) ฟ้าแลบเกิดห่างออกไปประมาณเท่าใด`, d,
+      [170*t, 680*t, 340/t], u(3,'m'),
+      `เสียงเดินทางทางเดียว (ไม่ใช่ไป-กลับ)\ns = vt = 340 × ${t} = ${fmtN(d)} m`); }},
+  {t:'speed', g(){ const f=pick([500,750,1000,1500,2000]), lw=1500/f;
+    return numQ(`เสียงความถี่ ${f} Hz เคลื่อนที่จากอากาศ (v = 340 m/s) ลงไปในน้ำ (v = 1,500 m/s) ความยาวคลื่นของเสียงในน้ำเป็นเท่าใด`, lw,
+      [340/f, f/1500, 2*lw], u(3,'m'),
+      `ความถี่ไม่เปลี่ยนเมื่อเปลี่ยนตัวกลาง\nλ_น้ำ = v_น้ำ / f = 1500 / ${f} = ${fmtN(lw)} m`); }},
+  // ---------- intensity ----------
+  {t:'intensity', g(){ const P=pick([1,2,5,10,20,50,100]), r=pick([2,3,4,5,10]), I=P/(4*Math.PI*r*r);
+    return numQ(`ลำโพงขนาดเล็กให้กำลังเสียง ${P} W กระจายออกรอบทิศทางเท่ากัน ความเข้มเสียงที่ระยะ ${r} m เป็นเท่าใด`, I,
+      [P/(4*Math.PI*r), P/(Math.PI*r*r), P/(2*Math.PI*r*r)], u(3,'W/m²'),
+      `I = P / (4πr²)\n= ${P} / (4π × ${r}²)\n= ${fmtN(I)} W/m²`); }},
+  {t:'intensity', g(){ const n=rnd(-10,0), b=10*(n+12);
+    return numQ(`เสียงมีความเข้ม ${pw(n)} W/m² ระดับความเข้มเสียงเป็นกี่เดซิเบล (I₀ = 10⁻¹² W/m²)`, b,
+      [10*Math.abs(n), b+10, b-10, n+12], u(3,'dB'),
+      `β = 10 log(I/I₀)\n= 10 log(${pw(n)} / 10⁻¹²)\n= 10 log(10${sup(n+12)}) = 10 × ${n+12} = ${b} dB`); }},
+  {t:'intensity', g(){ const b=pick([30,40,50,60,70,80,90,100,110]), n=b/10-12, I=Math.pow(10,n);
+    return numQ(`เสียงในห้องเรียนมีระดับความเข้มเสียง ${b} dB ความเข้มเสียงเป็นเท่าใด (I₀ = 10⁻¹² W/m²)`, I,
+      [Math.pow(10,n+1), Math.pow(10,n-1), Math.pow(10,-b/10), Math.pow(10,n+2), Math.pow(10,n-2)], x=>pw(Math.round(Math.log10(x)))+' W/m²',
+      `β = 10 log(I/I₀)\n${b} = 10 log(I / 10⁻¹²)\nI / 10⁻¹² = 10${sup(b/10)}\nI = ${pw(n)} W/m²`); }},
+  {t:'intensity', g(){ const b0=pick([50,60,70,80]), N=pick([10,100,1000]), b=b0+10*Math.log10(N);
+    return numQ(`เครื่องจักร 1 เครื่องทำให้เกิดระดับเสียง ${b0} dB ณ จุดหนึ่ง ถ้าเปิดเครื่องจักรแบบเดียวกันพร้อมกัน ${N.toLocaleString()} เครื่อง ระดับเสียง ณ จุดเดิมเป็นเท่าใด`, b,
+      [b0+N, b0*2, b0+20*Math.log10(N)+10, b0+1], u(4,'dB'),
+      `ความเข้มเสียงรวม = ${N.toLocaleString()} เท่า\nΔβ = 10 log(${N.toLocaleString()}) = ${10*Math.log10(N)} dB\nβ = ${b0} + ${10*Math.log10(N)} = ${b} dB\n(ความเข้มรวมกันได้ แต่เดซิเบลบวกกันตรง ๆ ไม่ได้)`); }},
+  {t:'intensity', g(){ const b1=pick([40,50,60,70]), k=pick([1,2,3,4]), b2=b1+10*k, R=Math.pow(10,k);
+    return numQ(`เสียงจากแหล่ง A มีระดับเสียง ${b1} dB เสียงจากแหล่ง B มีระดับเสียง ${b2} dB ความเข้มเสียง B เป็นกี่เท่าของ A`, R,
+      [k, b2/b1, 2*k, Math.pow(10,k+1)], x=>fmtN(x,3)+' เท่า',
+      `β_B − β_A = 10 log(I_B / I_A)\n${b2-b1} = 10 log(I_B / I_A)\nI_B / I_A = 10${sup(k)} = ${R.toLocaleString()} เท่า`); }},
+  {t:'intensity', g(){ const b1=pick([80,90,100,110]), m=pick([10,100]), b2=b1-20*Math.log10(m);
+    return numQ(`ที่ระยะ 1 m จากแหล่งกำเนิดเสียง วัดระดับเสียงได้ ${b1} dB ที่ระยะ ${m} m ระดับเสียงเป็นเท่าใด (ไม่คิดการดูดกลืน)`, b2,
+      [b1-10*Math.log10(m), b1/m, b1-40*Math.log10(m)], u(3,'dB'),
+      `I ∝ 1/r² ⇒ ระยะเพิ่ม ${m} เท่า ความเข้มลดลง ${(m*m).toLocaleString()} เท่า\nΔβ = 10 log(1/${(m*m).toLocaleString()}) = −${20*Math.log10(m)} dB\nβ = ${b1} − ${20*Math.log10(m)} = ${b2} dB`); }},
+  // ---------- pitch ----------
+  {t:'pitch', g(){ const f1=rnd(250,500), d=rnd(2,7), f2=f1+(Math.random()<.5?d:-d);
+    return numQ(`ส้อมเสียง 2 อันมีความถี่ ${f1} Hz และ ${f2} Hz เคาะพร้อมกัน จะได้ยินบีตส์กี่ครั้งต่อวินาที`, d,
+      [2*d, d+1, (f1+f2)/2, d-1], u(4,'Hz'),
+      `f_b = |f₁ − f₂| = |${f1} − ${f2}| = ${d} Hz\n(ได้ยินเสียงดัง ${d} ครั้งใน 1 วินาที)`); }},
+  {t:'pitch', g(){ const F=pick([256,320,384,440,512]), b=rnd(2,6), fs=F-b;
+    return numQ(`ดีดสายกีตาร์พร้อมกับเคาะส้อมเสียงความถี่ ${F} Hz ได้ยินบีตส์ ${b} Hz เมื่อขันสายให้ตึงขึ้นเล็กน้อย (ความถี่สายเพิ่มขึ้น) บีตส์ลดลง ความถี่เดิมของสายกีตาร์เป็นเท่าใด`, fs,
+      [F+b, F, F-2*b], u(4,'Hz'),
+      `ความถี่สายเป็นไปได้ ${F} ± ${b} = ${F-b} หรือ ${F+b} Hz\nขันสายตึง ความถี่สายสูงขึ้นแล้วบีตส์ลดลง แสดงว่าความถี่สายเข้าใกล้ ${F} จากด้านล่าง\n⇒ ความถี่สายเดิม = ${fs} Hz`); }},
+  {t:'pitch', g(){ const f=pick([110,131,220,262,330,440]), n=pick([1,2,3]), ans=f*Math.pow(2,n);
+    return numQ(`เสียงโน้ตหนึ่งมีความถี่ ${f} Hz เสียงที่สูงกว่านี้ ${n} อ็อกเทฟ มีความถี่เท่าใด`, ans,
+      [f*(n+1), f*Math.pow(2,n+1), f*2*n+f, f/Math.pow(2,n)], u(4,'Hz'),
+      `สูงขึ้น 1 อ็อกเทฟ ความถี่ × 2\nสูงขึ้น ${n} อ็อกเทฟ ⇒ f × 2${sup(n)} = ${f} × ${Math.pow(2,n)} = ${ans} Hz`); }},
+  {t:'pitch', g(){ const f0=pick([100,110,120,150,180,200,250]), n=rnd(2,6), ans=n*f0;
+    return numQ(`เสียงจากเครื่องดนตรีมีความถี่มูลฐาน ${f0} Hz ฮาร์มอนิกที่ ${n} ของเสียงนี้มีความถี่เท่าใด`, ans,
+      [(n+1)*f0, (n-1)*f0, f0/n], u(4,'Hz'),
+      `ฮาร์มอนิกที่ n มีความถี่ n × f₀\n= ${n} × ${f0} = ${ans} Hz`); }},
+  // ---------- resonance ----------
+  {t:'resonance', g(){ const L=pick([0.17,0.25,0.34,0.5,0.85]), f=340/(4*L);
+    return numQ(`ท่อปลายปิดด้านหนึ่งยาว ${L} m ถ้าอัตราเร็วเสียงในอากาศ 340 m/s ความถี่มูลฐาน (ฮาร์มอนิกที่ 1) ของท่อเป็นเท่าใด`, f,
+      [340/(2*L), 340/L, 3*340/(4*L)], u(3,'Hz'),
+      `ท่อปลายปิด: L = λ/4 ⇒ λ = 4L = ${fmtN(4*L)} m\nf₁ = v/λ = 340 / ${fmtN(4*L)} = ${fmtN(f)} Hz`); }},
+  {t:'resonance', g(){ const L=pick([0.17,0.25,0.34,0.5,0.85,1]), f=340/(2*L);
+    return numQ(`ขลุ่ย (ท่อปลายเปิดทั้งสองด้าน) ยาว ${L} m ถ้าอัตราเร็วเสียง 340 m/s ความถี่มูลฐานเป็นเท่าใด`, f,
+      [340/(4*L), 340/L, 2*340*L], u(3,'Hz'),
+      `ท่อปลายเปิด: L = λ/2 ⇒ λ = 2L = ${fmtN(2*L)} m\nf₁ = v/λ = 340 / ${fmtN(2*L)} = ${fmtN(f)} Hz`); }},
+  {t:'resonance', g(){ const f=pick([340,425,500,680,850,1000]), lam=340/f, L=100*lam/4;
+    return numQ(`ใช้ส้อมเสียงความถี่ ${f} Hz เคาะเหนือปากหลอดเรโซแนนซ์ (ปลายล่างปิดด้วยลูกสูบ) อัตราเร็วเสียง 340 m/s จะเกิดการสั่นพ้อง “ครั้งแรก” เมื่อลำอากาศยาวเท่าใด`, L,
+      [100*lam/2, 100*lam, 300*lam/4], u(3,'cm'),
+      `λ = v/f = 340 / ${f} = ${fmtN(lam)} m\nการสั่นพ้องครั้งแรก L₁ = λ/4 = ${fmtN(L)} cm`); }},
+  {t:'resonance', g(){ const f=pick([340,425,500,680,850]), lam=340/f, L=300*lam/4;
+    return numQ(`ส้อมเสียงความถี่ ${f} Hz กับหลอดเรโซแนนซ์ อัตราเร็วเสียง 340 m/s การสั่นพ้อง “ครั้งที่สอง” เกิดเมื่อลำอากาศยาวเท่าใด`, L,
+      [100*lam/4, 100*lam/2, 100*lam], u(3,'cm'),
+      `λ = 340 / ${f} = ${fmtN(lam)} m\nการสั่นพ้องครั้งที่สอง L₂ = 3λ/4 = ${fmtN(L)} cm`); }},
+  {t:'resonance', g(){ const v=pick([340,344,346,348,350]), f=pick([400,500,800,1000]), dL=v/(2*f);
+    return numQ(`ทดลองกับส้อมเสียง ${f} Hz พบการสั่นพ้องสองครั้งติดกันที่ลำอากาศยาวต่างกัน ${fmtN(dL*100,4)} cm อัตราเร็วเสียงในอากาศขณะนั้นเป็นเท่าใด`, v,
+      [f*dL, 4*f*dL, v-6], u(4,'m/s'),
+      `ระยะระหว่างการสั่นพ้องที่ติดกัน ΔL = λ/2\nλ = 2 × ${fmtN(dL,4)} = ${fmtN(2*dL,4)} m\nv = fλ = ${f} × ${fmtN(2*dL,4)} = ${v} m/s`); }},
+  {t:'resonance', g(){ const f0=pick([100,120,150,170,200,250]), ans=3*f0;
+    return numQ(`ท่อปลายปิดด้านหนึ่งมีความถี่มูลฐาน ${f0} Hz ความถี่ถัดไปที่สูงกว่าความถี่มูลฐานและทำให้ท่อนี้เกิดการสั่นพ้องได้คือเท่าใด`, ans,
+      [2*f0, 4*f0, 1.5*f0], u(4,'Hz'),
+      `ท่อปลายปิดเกิดเฉพาะฮาร์มอนิกคี่ f₁, 3f₁, 5f₁ …\nความถี่ถัดไป = 3 × ${f0} = ${ans} Hz`); }},
+  // ---------- doppler ----------
+  {t:'doppler', g(){ const c=pick([{vs:20,fs:[320,480,640,800]},{vs:40,fs:[300,450,600,750]},{vs:68,fs:[400,480,600,800]}]);
+    const f=pick(c.fs), v=340, ans=f*v/(v-c.vs);
+    return numQ(`รถพยาบาลเปิดไซเรนความถี่ ${f} Hz วิ่งเข้าหาผู้ฟังที่ยืนนิ่งด้วยอัตราเร็ว ${c.vs} m/s ถ้าอัตราเร็วเสียง 340 m/s ผู้ฟังได้ยินเสียงความถี่เท่าใด`, ans,
+      [f*v/(v+c.vs), f*(v+c.vs)/v, f*(v-c.vs)/v], u(4,'Hz'),
+      `แหล่งกำเนิดเคลื่อนที่เข้าหา ⇒ f′ = f·v/(v − v_s)\n= ${f} × 340 / (340 − ${c.vs})\n= ${fmtN(ans,4)} Hz (สูงขึ้น)`); }},
+  {t:'doppler', g(){ const c=pick([{vs:20,fs:[360,540,720,900]},{vs:60,fs:[400,500,600,800]}]);
+    const f=pick(c.fs), v=340, ans=f*v/(v+c.vs);
+    return numQ(`รถไฟเปิดหวูดความถี่ ${f} Hz แล่นออกห่างจากผู้ฟังที่ยืนบนชานชาลาด้วยอัตราเร็ว ${c.vs} m/s (อัตราเร็วเสียง 340 m/s) ผู้ฟังได้ยินเสียงความถี่เท่าใด`, ans,
+      [f*v/(v-c.vs), f*(v-c.vs)/v, f*(v+c.vs)/v], u(4,'Hz'),
+      `แหล่งกำเนิดเคลื่อนที่ออกห่าง ⇒ f′ = f·v/(v + v_s)\n= ${f} × 340 / (340 + ${c.vs})\n= ${fmtN(ans,4)} Hz (ต่ำลง)`); }},
+  {t:'doppler', g(){ const vo=pick([17,34,68]), f=pick([400,500,600,700,800]), v=340, toward=Math.random()<.5;
+    const ans = toward ? f*(v+vo)/v : f*(v-vo)/v;
+    return numQ(`ผู้ฟังขี่จักรยานยนต์${toward?'เข้าหา':'ออกห่างจาก'}ลำโพงที่อยู่นิ่ง ซึ่งให้เสียงความถี่ ${f} Hz ด้วยอัตราเร็ว ${vo} m/s (อัตราเร็วเสียง 340 m/s) ผู้ฟังได้ยินเสียงความถี่เท่าใด`, ans,
+      [toward ? f*(v-vo)/v : f*(v+vo)/v, f*v/(v-vo), f*v/(v+vo)], u(4,'Hz'),
+      `ผู้ฟังเคลื่อนที่${toward?'เข้าหา':'ออกห่าง'} ⇒ f′ = f(v ${toward?'+':'−'} v_o)/v\n= ${f} × (340 ${toward?'+':'−'} ${vo}) / 340\n= ${fmtN(ans,4)} Hz`); }},
+  {t:'doppler', g(){ const vs=pick([510,680,850,1020]), M=vs/340;
+    return numQ(`เครื่องบินขับไล่บินด้วยอัตราเร็ว ${vs} m/s ในอากาศที่อัตราเร็วเสียง 340 m/s เครื่องบินมีเลขมัคเท่าใด`, M,
+      [1/M, 2*M, M+1], x=>fmtN(x,3),
+      `เลขมัค M = v_s / v = ${vs} / 340 = ${fmtN(M,3)}\n(M > 1 จึงเกิดคลื่นกระแทก)`); }},
+];
+
+/* =========================================================
+   Sound effects + audio context
+   ========================================================= */
+let actx = null, muted = store.get('sq-muted', false);
+function ac(){
+  if(!actx){ const C = window.AudioContext || window.webkitAudioContext; if(!C) return null; actx = new C(); }
+  if(actx.state==='suspended') actx.resume();
+  return actx;
+}
+function blip(freqs, dur=.12, type='sine', vol=.15){
+  if(muted) return; const c=ac(); if(!c) return;
+  freqs.forEach((f,i)=>{
+    const o=c.createOscillator(), g=c.createGain(), t=c.currentTime+i*dur;
+    o.type=type; o.frequency.value=f;
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+.01); g.gain.exponentialRampToValueAtTime(.001,t+dur);
+    o.connect(g).connect(c.destination); o.start(t); o.stop(t+dur+.02);
+  });
+}
+const sfx = {
+  good: ()=>blip([660,880,1320],.09,'triangle'),
+  bad:  ()=>blip([220,160],.18,'sawtooth',.08),
+  click:()=>blip([520],.05,'square',.05),
+  win:  ()=>blip([523,659,784,1047,1319],.11,'triangle'),
+};
+function toggleMute(){ muted=!muted; store.set('sq-muted',muted); $('#muteBtn').textContent = muted?'🔕':'🔔'; }
+
+/* =========================================================
+   Navigation / UI helpers
+   ========================================================= */
+function show(id){
+  stopAllLabAudio();
+  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active', s.id===id));
+  const app=$('#app'); if(app.scrollIntoView && window.scrollY>app.offsetTop) app.scrollIntoView({behavior:'smooth'});
+  setTimeout(notifyHeight,50);
+}
+function goHome(){ clearInterval(quiz.timer); show('s-home'); }
+function playerName(){ return ($('#playerName').value || '').trim() || 'ผู้เล่นนิรนาม'; }
+function toggleDark(){ document.body.classList.toggle('dark'); store.set('sq-dark', document.body.classList.contains('dark')); }
+function toggleFullscreen(){
+  const d=document, el=d.documentElement;
+  if(!d.fullscreenElement && !d.webkitFullscreenElement){ (el.requestFullscreen||el.webkitRequestFullscreen||function(){}).call(el); }
+  else { (d.exitFullscreen||d.webkitExitFullscreen).call(d); }
+}
+function openFormulas(){ $('#formulaModal').classList.add('show'); }
+function closeFormulas(){ $('#formulaModal').classList.remove('show'); }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeFormulas(); });
+
+/* Communication with a parent page when embedded in an <iframe> */
+function notifyHeight(){
+  if(window.parent===window) return;
+  try{ window.parent.postMessage({type:'krupung-sound-game:resize', height: document.documentElement.scrollHeight}, '*'); }catch(e){}
+}
+function notifyScore(mode, score, extra){
+  if(window.parent===window) return;
+  try{ window.parent.postMessage(Object.assign({type:'krupung-sound-game:score', name:playerName(), mode, score}, extra||{}), '*'); }catch(e){}
+}
+window.addEventListener('resize', notifyHeight);
+
+/* =========================================================
+   QUIZ MODE
+   ========================================================= */
+const quiz = {topic:'all', list:[], i:0, score:0, lives:3, streak:0, best:0, correct:0, fifty:true, time:45, timer:null, locked:false, log:[]};
+const Q_PER_ROUND = 10, Q_TIME = 45;
+
+function openTopics(){
+  const box=$('#topicList'); box.innerHTML='';
+  const items=[['all',{name:'ผสมทุกหัวข้อ',icon:'🎲',desc:'สุ่มคำถามจากทุกหัวข้อ เหมาะสำหรับทบทวนก่อนสอบ'}], ...Object.entries(TOPICS)];
+  items.forEach(([k,t])=>{
+    const b=document.createElement('button'); b.className='topic'+(k===quiz.topic?' sel':'');
+    b.innerHTML=`<div class="ti">${t.icon}</div><b>${t.name}</b><span>${t.desc}</span>`;
+    b.onclick=()=>{ quiz.topic=k; box.querySelectorAll('.topic').forEach(x=>x.classList.remove('sel')); b.classList.add('sel'); sfx.click(); };
+    b.ondblclick=startQuiz;
+    box.appendChild(b);
+  });
+  show('s-topics');
+}
+
+function buildRound(topic){
+  const okT = x => topic==='all' || x.t===topic;
+  const concepts = shuffle(CONCEPTS.filter(okT));
+  const gens = shuffle(GENS.filter(okT));
+  const out=[]; let ci=0, gi=0;
+  // alternate concept / calculation, roughly half each
+  for(let k=0;k<Q_PER_ROUND;k++){
+    const wantCalc = (k%2===1);
+    if((wantCalc && gens.length) || ci>=concepts.length){
+      const g=gens[gi++ % gens.length]; const q=g.g(); q.t=g.t; out.push(q);
+    } else {
+      const c=concepts[ci++]; out.push({t:c.t, q:c.q, options:[...c.a], correct:c.a[0], explain:c.e});
+    }
+  }
+  return shuffle(out).map(q=>({...q, options:shuffle(q.options)}));
+}
+
+function startQuiz(){
+  ac();
+  Object.assign(quiz,{list:buildRound(quiz.topic), i:0, score:0, lives:3, streak:0, best:0, correct:0, fifty:true, log:[]});
+  $('#againBtn').onclick = startQuiz;
+  show('s-quiz'); renderQuestion();
+}
+
+function renderQuestion(){
+  const q=quiz.list[quiz.i];
+  quiz.locked=false;
+  $('#qNum').textContent=`ข้อ ${quiz.i+1}/${quiz.list.length}`;
+  $('#hearts').textContent='❤️'.repeat(quiz.lives)+'🤍'.repeat(3-quiz.lives);
+  $('#score').textContent=quiz.score;
+  $('#progressBar').style.width=(quiz.i/quiz.list.length*100)+'%';
+  $('#qTopic').textContent=`${TOPICS[q.t].icon} ${TOPICS[q.t].name}`;
+  $('#qText').textContent=q.q;
+  const box=$('#opts'); box.innerHTML='';
+  q.options.forEach((o,idx)=>{
+    const b=document.createElement('button'); b.className='opt';
+    b.innerHTML=`<span class="k">${'ABCD'[idx]}</span><span></span>`; b.lastChild.textContent=o;
+    b.onclick=()=>answer(o,b);
+    box.appendChild(b);
+  });
+  $('#explain').className='explain'; $('#nextBtn').style.display='none';
+  $('#fiftyBtn').disabled=!quiz.fifty;
+  startTimer();
+  notifyHeight();
+}
+
+function startTimer(){
+  clearInterval(quiz.timer); quiz.time=Q_TIME; drawTime();
+  quiz.timer=setInterval(()=>{ quiz.time-=0.1; drawTime(); if(quiz.time<=0){ clearInterval(quiz.timer); answer(null,null); } },100);
+}
+function drawTime(){
+  $('#timeLeft').textContent=Math.max(0,Math.ceil(quiz.time));
+  $('#timeBar').style.width=Math.max(0,quiz.time/Q_TIME*100)+'%';
+}
+
+function answer(choice, btn){
+  if(quiz.locked) return; quiz.locked=true; clearInterval(quiz.timer);
+  const q=quiz.list[quiz.i]; const ok = choice===q.correct;
+  document.querySelectorAll('#opts .opt').forEach(b=>{
+    b.disabled=true;
+    if(b.lastChild.textContent===q.correct) b.classList.add('correct');
+  });
+  let gained=0;
+  if(ok){
+    quiz.correct++; quiz.streak++; quiz.best=Math.max(quiz.best,quiz.streak);
+    const timeBonus=Math.round(Math.max(0,quiz.time)*2);
+    const streakBonus=Math.min(5,quiz.streak-1)*20;
+    gained=100+timeBonus+streakBonus; quiz.score+=gained; sfx.good();
+    if(quiz.streak>=2){ const c=$('#combo'); c.textContent=`🔥 คอมโบ x${quiz.streak}`; c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop'); }
+  } else {
+    quiz.streak=0; quiz.lives--; sfx.bad();
+    if(btn) btn.classList.add('wrong');
+    const card=$('#qcard'); card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
+  }
+  quiz.log.push({q:q.q, t:q.t, choice, correct:q.correct, ok, explain:q.explain});
+  const ex=$('#explain');
+  ex.innerHTML=''; const v=document.createElement('div'); v.className='verdict';
+  v.textContent = ok ? `✅ ถูกต้อง! +${gained} คะแนน` : (choice===null ? `⏰ หมดเวลา! คำตอบคือ: ${q.correct}` : `❌ ยังไม่ถูก คำตอบคือ: ${q.correct}`);
+  v.style.color = ok ? 'var(--good)' : 'var(--bad)';
+  const body=document.createElement('div'); body.textContent='💡 '+q.explain;
+  ex.append(v,body); ex.className='explain show';
+  ex.style.borderLeftColor = ok ? 'var(--good)' : 'var(--bad)';
+  $('#hearts').textContent='❤️'.repeat(quiz.lives)+'🤍'.repeat(3-quiz.lives);
+  $('#score').textContent=quiz.score;
+  $('#fiftyBtn').disabled=true;
+  const last = quiz.i>=quiz.list.length-1 || quiz.lives<=0;
+  $('#nextBtn').textContent = last ? 'ดูผลคะแนน 🏁' : 'ข้อต่อไป →';
+  $('#nextBtn').style.display='inline-block';
+  notifyHeight();
+}
+
+function nextQuestion(){
+  if(quiz.lives<=0 || quiz.i>=quiz.list.length-1) return endQuiz();
+  quiz.i++; renderQuestion();
+}
+
+function useFifty(){
+  if(!quiz.fifty || quiz.locked) return; quiz.fifty=false; $('#fiftyBtn').disabled=true; sfx.click();
+  const q=quiz.list[quiz.i];
+  const wrong=shuffle([...document.querySelectorAll('#opts .opt')].filter(b=>b.lastChild.textContent!==q.correct)).slice(0,2);
+  wrong.forEach(b=>{ b.disabled=true; b.classList.add('gone'); });
+}
+
+function endQuiz(){
+  clearInterval(quiz.timer);
+  $('#progressBar').style.width='100%';
+  const n=quiz.list.length, pct=quiz.correct/n;
+  const stars = pct>=.8?3:pct>=.6?2:pct>=.4?1:0;
+  const ranks=['🌱 นักฟังฝึกหัด — ทบทวนสูตรแล้วลองใหม่นะ','🎧 นักสำรวจเสียง — มาถูกทางแล้ว!','🎼 นักฟิสิกส์เสียงฝีมือดี','🏆 ปรมาจารย์แห่งคลื่นเสียง!'];
+  const tname = quiz.topic==='all' ? 'ผสมทุกหัวข้อ' : TOPICS[quiz.topic].name;
+  $('#resTitle').textContent = quiz.lives<=0 ? '💔 หัวใจหมดแล้ว! สรุปผล' : '🏁 จบภารกิจ Sound Quiz';
+  $('#resStars').textContent='★'.repeat(stars)+'☆'.repeat(3-stars);
+  $('#resStars').style.color='#f59e0b';
+  $('#resScore').textContent=quiz.score.toLocaleString();
+  $('#resRank').textContent=`${playerName()} • ${tname} • ${ranks[stars]}`;
+  $('#resStats').innerHTML=`<div class="stat"><b>${quiz.correct}/${n}</b>ตอบถูก</div><div class="stat"><b>${quiz.log.length}</b>ข้อที่ทำ</div><div class="stat"><b>🔥 ${quiz.best}</b>คอมโบสูงสุด</div>`;
+  const rv=$('#resReview'); rv.innerHTML='';
+  const wrong=quiz.log.filter(x=>!x.ok);
+  if(wrong.length){
+    const h=document.createElement('h2'); h.textContent='📝 ทบทวนข้อที่ตอบผิด'; h.style.marginTop='10px'; rv.appendChild(h);
+    wrong.forEach(w=>{
+      const d=document.createElement('details'); const s=document.createElement('summary'); s.textContent=w.q;
+      const a=document.createElement('div'); a.className='ans';
+      a.textContent=`คุณตอบ: ${w.choice===null?'(หมดเวลา)':w.choice}\nคำตอบที่ถูก: ${w.correct}\n💡 ${w.explain}`;
+      d.append(s,a); rv.appendChild(d);
+    });
+  }
+  if(stars>=2) { sfx.win(); confettiBurst(); }
+  saveScore('Sound Quiz', quiz.score, tname);
+  notifyScore('quiz', quiz.score, {topic:tname, correct:quiz.correct, total:n});
+  show('s-result');
+}
+
+/* =========================================================
+   Audio lab helpers (beats + tuning)
+   ========================================================= */
+const lab = {oscs:[], master:null, analyser:null, raf:null, hist:[], startT:0, stopTimer:null, canvas:null, window:5};
+function stopAllLabAudio(){
+  clearTimeout(lab.stopTimer);
+  const c=actx;
+  lab.oscs.forEach(o=>{ try{ o.g.gain.setTargetAtTime(0,c.currentTime,.02); o.o.stop(c.currentTime+.15);}catch(e){} });
+  lab.oscs=[];
+  if(lab.raf) cancelAnimationFrame(lab.raf); lab.raf=null;
+  tune.playing=null; const tb=$('#tuneBothBtn'); if(tb) tb.textContent='🔊 เล่นพร้อมกัน';
+  const bb=$('#beatPlayBtn'); if(bb) bb.disabled=false;
+}
+function labStart(freqs, canvas, seconds){
+  const c=ac(); if(!c){ alert('เบราว์เซอร์นี้ไม่รองรับ Web Audio'); return; }
+  stopAllLabAudio();
+  if(!lab.analyser){
+    lab.master=c.createGain(); lab.master.gain.value=.9;
+    lab.analyser=c.createAnalyser(); lab.analyser.fftSize=1024;
+    lab.master.connect(lab.analyser); lab.analyser.connect(c.destination);
+  }
+  const t=c.currentTime;
+  lab.oscs = freqs.map(f=>{
+    const o=c.createOscillator(), g=c.createGain(); o.type='sine'; o.frequency.value=f;
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.22,t+.05);
+    o.connect(g).connect(lab.master); o.start(t); return {o,g};
+  });
+  if(seconds){ lab.oscs.forEach(x=>{ x.g.gain.setValueAtTime(.22,t+seconds-.05); x.g.gain.linearRampToValueAtTime(0,t+seconds); x.o.stop(t+seconds+.05); }); }
+  lab.canvas=canvas; lab.hist=[]; lab.startT=performance.now(); lab.window=5;
+  const buf=new Float32Array(lab.analyser.fftSize);
+  const loop=()=>{
+    lab.analyser.getFloatTimeDomainData(buf);
+    let s=0; for(let i=0;i<buf.length;i++) s+=buf[i]*buf[i];
+    lab.hist.push({t:(performance.now()-lab.startT)/1000, a:Math.sqrt(s/buf.length)});
+    drawScope();
+    lab.raf=requestAnimationFrame(loop);
+  };
+  loop();
+  if(seconds) lab.stopTimer=setTimeout(()=>{ stopAllLabAudio(); }, seconds*1000+150);
+}
+function drawScope(){
+  const cv=lab.canvas; if(!cv) return; const x=cv.getContext('2d'), W=cv.width, H=cv.height;
+  x.fillStyle='#0b1220'; x.fillRect(0,0,W,H);
+  const now=lab.hist.length?lab.hist[lab.hist.length-1].t:0, win=lab.window, t0=Math.max(0,now-win);
+  // grid (1 s)
+  x.strokeStyle='rgba(148,163,184,.25)'; x.lineWidth=1; x.fillStyle='rgba(148,163,184,.7)'; x.font='14px Kanit, sans-serif';
+  for(let s=Math.ceil(t0); s<=t0+win; s++){ const px=(s-t0)/win*W; x.beginPath(); x.moveTo(px,30); x.lineTo(px,H); x.stroke(); x.fillText(s+' s',px+4,H-8); }
+  x.beginPath(); x.moveTo(0,H-30); x.lineTo(W,H-30); x.stroke();
+  if(lab.canvas.dataset.hide==='1'){ x.fillStyle='#93c5fd'; x.font='22px Kanit, sans-serif'; x.textAlign='center'; x.fillText('🙈 ซ่อนกราฟ — ฟังด้วยหูนะ!',W/2,H/2); x.textAlign='left'; return; }
+  x.strokeStyle='#22d3ee'; x.lineWidth=3; x.beginPath();
+  let first=true;
+  for(const p of lab.hist){ if(p.t<t0) continue; const px=(p.t-t0)/win*W, py=(H-30)-Math.min(1,p.a/0.32)*(H-70);
+    if(first){x.moveTo(px,py);first=false;} else x.lineTo(px,py); }
+  x.stroke();
+}
+function clearScope(cv, msg){
+  const x=cv.getContext('2d'); x.fillStyle='#0b1220'; x.fillRect(0,0,cv.width,cv.height);
+  x.fillStyle='#93c5fd'; x.font='22px Kanit, sans-serif'; x.textAlign='center'; x.fillText(msg,cv.width/2,cv.height/2); x.textAlign='left';
+}
+
+/* =========================================================
+   BEAT DETECTIVE
+   ========================================================= */
+const beat = {round:0, total:5, score:0, f1:0, f2:0, fb:0, done:false, plays:0, correct:0};
+function startBeats(){
+  ac(); Object.assign(beat,{round:0, score:0, correct:0});
+  $('#againBtn').onclick = startBeats;
+  show('s-beats'); newBeatRound();
+}
+function newBeatRound(){
+  beat.round++; beat.done=false; beat.plays=0;
+  beat.fb = rnd(1,6);
+  beat.f1 = rnd(300,520); beat.f2 = beat.f1 + beat.fb;
+  $('#bRound').textContent=`รอบ ${beat.round}/${beat.total}`; $('#bScore').textContent=beat.score;
+  const opts = new Set([beat.fb]);
+  while(opts.size<4){ const v=beat.fb+pick([-3,-2,-1,1,2,3]); if(v>=1 && v<=9) opts.add(v); }
+  const box=$('#beatChoices'); box.innerHTML='';
+  [...opts].sort((a,b)=>a-b).forEach(v=>{
+    const b=document.createElement('button'); b.className='opt'; b.textContent=v+' Hz'; b.dataset.v=v;
+    b.onclick=()=>answerBeat(v,b); box.appendChild(b);
+  });
+  $('#beatExplain').className='explain'; $('#beatNext').style.display='none';
+  const cv=$('#beatCanvas'); cv.dataset.hide = $('#showGraph').checked?'0':'1';
+  clearScope(cv,'กด ▶ ฟังเสียง เพื่อเริ่ม');
+}
+$('#showGraph').addEventListener('change',e=>{ $('#beatCanvas').dataset.hide = e.target.checked?'0':'1'; });
+function playBeat(){
+  beat.plays++;
+  const cv=$('#beatCanvas'); cv.dataset.hide = (!beat.done && !$('#showGraph').checked)?'1':'0';
+  labStart([beat.f1,beat.f2], cv, 5);
+  $('#beatPlayBtn').disabled=true;
+}
+function answerBeat(v,btn){
+  if(beat.done) return; beat.done=true;
+  const graphOff = !$('#showGraph').checked;
+  document.querySelectorAll('#beatChoices .opt').forEach(b=>{ b.disabled=true; if(+b.dataset.v===beat.fb) b.classList.add('correct'); });
+  const ok = v===beat.fb; let gained=0;
+  if(ok){ beat.correct++; gained = (beat.plays<=1?120:100) * (graphOff?2:1); beat.score+=gained; sfx.good(); }
+  else { btn.classList.add('wrong'); sfx.bad(); }
+  $('#bScore').textContent=beat.score;
+  const ex=$('#beatExplain');
+  ex.textContent = (ok?`✅ ถูกต้อง! +${gained} คะแนน\n`:`❌ คำตอบคือ ${beat.fb} Hz\n`) +
+    `ความถี่ของส้อมเสียง: f₁ = ${beat.f1} Hz, f₂ = ${beat.f2} Hz\nf_b = |f₁ − f₂| = |${beat.f1} − ${beat.f2}| = ${beat.fb} Hz → ได้ยินเสียงดัง ${beat.fb} ครั้งต่อวินาที\n(กด ▶ ฟังเสียงอีกครั้งเพื่อดูกราฟเฉลย)`;
+  ex.className='explain show'; ex.style.borderLeftColor = ok?'var(--good)':'var(--bad)';
+  $('#beatCanvas').dataset.hide='0';
+  $('#beatNext').textContent = beat.round>=beat.total ? 'ดูผลคะแนน 🏁' : 'ต่อไป →';
+  $('#beatNext').style.display='inline-block';
+  notifyHeight();
+}
+function nextBeat(){
+  stopAllLabAudio();
+  if(beat.round>=beat.total) return endLab('นักสืบบีตส์', beat.score, beat.correct, beat.total, 'beats');
+  newBeatRound();
+}
+
+/* =========================================================
+   TUNING CHALLENGE
+   ========================================================= */
+const tune = {round:0, total:3, score:0, target:0, min:0, max:0, playing:null, done:false, correct:0};
+function startTuning(){
+  ac(); Object.assign(tune,{round:0, score:0, correct:0});
+  $('#againBtn').onclick = startTuning;
+  show('s-tuning'); newTuneRound();
+}
+function newTuneRound(){
+  tune.round++; tune.done=false;
+  tune.target = Math.round((rnd(2600,5200)/10)*10)/10;     // 260.0 – 520.0 Hz
+  tune.min = Math.floor(tune.target - rnd(25,45)); tune.max = Math.ceil(tune.target + rnd(25,45));
+  const sl=$('#tuneSlider'); sl.min=tune.min; sl.max=tune.max;
+  let start; do{ start = tune.min + Math.random()*(tune.max-tune.min); } while(Math.abs(start-tune.target)<12);
+  sl.value = start.toFixed(1);
+  $('#tRound').textContent=`รอบ ${tune.round}/${tune.total}`; $('#tScore').textContent=tune.score;
+  $('#tuneReadout').textContent='ความถี่ของฉัน: ??? Hz (เปิดเผยหลังส่งคำตอบ)';
+  $('#tuneExplain').className='explain'; $('#tuneNext').style.display='none'; $('#tuneSubmit').disabled=false;
+  clearScope($('#tuneCanvas'),'กด 🔊 เล่นพร้อมกัน แล้วปรับแถบเลื่อน');
+}
+function myFreq(){ return parseFloat($('#tuneSlider').value); }
+function tunePlay(which){
+  if(tune.playing===which){ stopAllLabAudio(); return; }
+  const cv=$('#tuneCanvas'); cv.dataset.hide='0';
+  const freqs = which==='target'?[tune.target] : which==='mine'?[myFreq()] : [tune.target, myFreq()];
+  labStart(freqs, cv, which==='both'?0:2);
+  if(which==='both'){ lab.window=4; tune.playing='both'; $('#tuneBothBtn').textContent='⏹ หยุด'; }
+  else tune.playing=which;
+}
+function applyTuneFreq(){
+  if(!actx || !lab.oscs.length) return;
+  const f=myFreq();
+  if(tune.playing==='both' && lab.oscs[1]) lab.oscs[1].o.frequency.setTargetAtTime(f, actx.currentTime, .03);
+  if(tune.playing==='mine' && lab.oscs[0]) lab.oscs[0].o.frequency.setTargetAtTime(f, actx.currentTime, .03);
+}
+$('#tuneSlider').addEventListener('input', applyTuneFreq);
+function nudge(d){
+  if(tune.done) return;
+  const sl=$('#tuneSlider'); sl.value=Math.min(tune.max,Math.max(tune.min, myFreq()+d)).toFixed(1); applyTuneFreq(); sfx.click();
+}
+function submitTune(){
+  if(tune.done) return; tune.done=true; $('#tuneSubmit').disabled=true;
+  const f=myFreq(), err=Math.abs(f-tune.target);
+  const pts = err<=0.5?200 : err<=1?160 : err<=2?120 : err<=4?80 : err<=8?40 : 0;
+  tune.score+=pts; if(pts>=120) tune.correct++;
+  pts>=120 ? sfx.good() : sfx.bad();
+  $('#tScore').textContent=tune.score;
+  $('#tuneReadout').textContent=`ความถี่ของฉัน: ${f.toFixed(1)} Hz`;
+  const grade = err<=0.5?'🎯 ตรงเป๊ะ! หูทองคำ':err<=1?'🎉 ยอดเยี่ยม':err<=2?'👍 ดีมาก':err<=4?'🙂 ใกล้แล้ว':err<=8?'😅 ยังห่างอยู่':'🙈 ลองฟังบีตส์ให้ช้าลงอีกนะ';
+  const ex=$('#tuneExplain');
+  ex.textContent=`${grade}  +${pts} คะแนน\nเสียงปริศนา = ${tune.target.toFixed(1)} Hz\nเสียงของคุณ = ${f.toFixed(1)} Hz\nความถี่บีตส์ที่เหลืออยู่ f_b = |${tune.target.toFixed(1)} − ${f.toFixed(1)}| = ${err.toFixed(1)} Hz`;
+  ex.className='explain show'; ex.style.borderLeftColor = pts>=120?'var(--good)':'var(--warn)';
+  $('#tuneNext').textContent = tune.round>=tune.total ? 'ดูผลคะแนน 🏁' : 'ต่อไป →';
+  $('#tuneNext').style.display='inline-block';
+  notifyHeight();
+}
+function nextTune(){
+  stopAllLabAudio();
+  if(tune.round>=tune.total) return endLab('จูนเสียงให้ตรง', tune.score, tune.correct, tune.total, 'tuning');
+  newTuneRound();
+}
+
+/* Shared result screen for the lab modes */
+function endLab(title, score, correct, total, key){
+  const pct=correct/total, stars=pct>=.8?3:pct>=.6?2:pct>=.3?1:0;
+  $('#resTitle').textContent=`🏁 จบภารกิจ ${title}`;
+  $('#resStars').textContent='★'.repeat(stars)+'☆'.repeat(3-stars); $('#resStars').style.color='#f59e0b';
+  $('#resScore').textContent=score.toLocaleString();
+  $('#resRank').textContent=`${playerName()} • ${key==='beats'?'นับบีตส์ถูก':'จูนได้แม่นยำ (คลาดเคลื่อน ≤ 2 Hz)'} ${correct}/${total} รอบ`;
+  $('#resStats').innerHTML=`<div class="stat"><b>${correct}/${total}</b>${key==='beats'?'ตอบถูก':'จูนแม่นยำ'}</div><div class="stat"><b>${score}</b>คะแนน</div><div class="stat"><b>${'★'.repeat(stars)||'-'}</b>ดาว</div>`;
+  $('#resReview').innerHTML = `<div class="explain show" style="border-left-color:var(--primary)">💡 สรุปความรู้: บีตส์เกิดจากการแทรกสอดของเสียงสองขบวนที่ความถี่ต่างกันเล็กน้อย ทำให้ได้ยินเสียงดัง-ค่อยเป็นจังหวะ ความถี่บีตส์ f_b = |f₁ − f₂| นักดนตรีใช้หลักการนี้ในการตั้งเสียงเครื่องดนตรี โดยปรับจนบีตส์หายไป</div>`;
+  if(stars>=2){ sfx.win(); confettiBurst(); }
+  saveScore(title, score, '');
+  notifyScore(key, score, {correct, total});
+  show('s-result');
+}
+
+/* =========================================================
+   Leaderboard (stored in this browser only)
+   ========================================================= */
+const LB_KEY='krupung-sound-quest-lb';
+let boardFilter='ทั้งหมด';
+function saveScore(mode, score, detail){
+  const lb=store.get(LB_KEY,[]);
+  lb.push({name:playerName(), mode, detail, score, date:new Date().toLocaleDateString('th-TH')});
+  lb.sort((a,b)=>b.score-a.score); store.set(LB_KEY, lb.slice(0,100));
+}
+function showLeaderboard(){
+  clearInterval(quiz.timer);
+  const tabs=$('#boardTabs'); tabs.innerHTML='';
+  ['ทั้งหมด','Sound Quiz','นักสืบบีตส์','จูนเสียงให้ตรง'].forEach(m=>{
+    const b=document.createElement('button'); b.className='icon-btn'+(m===boardFilter?' sel':''); b.textContent=m;
+    b.onclick=()=>{ boardFilter=m; showLeaderboard(); }; tabs.appendChild(b);
+  });
+  const lb=store.get(LB_KEY,[]).filter(r=>boardFilter==='ทั้งหมด'||r.mode===boardFilter).slice(0,10);
+  const body=$('#boardBody'); body.innerHTML='';
+  if(!lb.length){ body.innerHTML='<tr><td colspan="5" class="muted center">ยังไม่มีคะแนน มาเล่นกันเลย!</td></tr>'; }
+  lb.forEach((r,i)=>{
+    const tr=document.createElement('tr');
+    [['🥇','🥈','🥉'][i]||(i+1), r.name, r.mode+(r.detail?' ('+r.detail+')':''), r.score.toLocaleString(), r.date].forEach(v=>{ const td=document.createElement('td'); td.textContent=v; tr.appendChild(td); });
+    body.appendChild(tr);
+  });
+  show('s-board');
+}
+function clearBoard(){ if(confirm('ต้องการล้างตารางคะแนนทั้งหมดในเครื่องนี้ใช่ไหม?')){ store.set(LB_KEY,[]); showLeaderboard(); } }
+
+/* =========================================================
+   Confetti (no external library)
+   ========================================================= */
+function confettiBurst(){
+  const cv=document.createElement('canvas'); cv.style.cssText='position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:60';
+  document.body.appendChild(cv); cv.width=innerWidth; cv.height=innerHeight; const x=cv.getContext('2d');
+  const cols=['#f59e0b','#10b981','#3b82f6','#ef4444','#a855f7','#22d3ee'];
+  const P=Array.from({length:140},()=>({x:cv.width/2,y:cv.height*.45,vx:(Math.random()-.5)*14,vy:-Math.random()*14-4,s:Math.random()*6+4,c:pick(cols),r:Math.random()*6}));
+  let n=0; (function f(){ x.clearRect(0,0,cv.width,cv.height);
+    P.forEach(p=>{ p.vy+=.35; p.x+=p.vx; p.y+=p.vy; p.r+=.2; x.save(); x.translate(p.x,p.y); x.rotate(p.r); x.fillStyle=p.c; x.fillRect(-p.s/2,-p.s/2,p.s,p.s*.6); x.restore(); });
+    if(++n<120) requestAnimationFrame(f); else cv.remove(); })();
+}
+
+/* =========================================================
+   Hero animation: longitudinal sound wave (particles)
+   ========================================================= */
+(function heroWave(){
+  const cv=$('#waveCanvas'); const x=cv.getContext('2d');
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let W,H,dpr;
+  function size(){ dpr=window.devicePixelRatio||1; W=cv.clientWidth; H=cv.clientHeight; cv.width=W*dpr; cv.height=H*dpr; x.setTransform(dpr,0,0,dpr,0,0); }
+  size(); window.addEventListener('resize',size);
+  const cols=60, rows=6;
+  function frame(ms){
+    const t=ms/1000; x.clearRect(0,0,W,H);
+    const k=2*Math.PI/(W/2.5), w=2*Math.PI*0.8, A=Math.min(10,W/cols*0.9);
+    for(let i=0;i<cols;i++){
+      const x0=(i+.5)*W/cols;
+      const disp=A*Math.sin(k*x0-w*t);
+      const dens=-Math.cos(k*x0-w*t); // proportional to pressure change
+      const r=Math.round(147+(252-147)*(dens>0?dens:0)), g=Math.round(197-(197-165)*Math.abs(dens)), b=Math.round(253-(253-165)*(dens>0?dens:0));
+      x.fillStyle=`rgb(${r},${g},${b})`;
+      for(let j=0;j<rows;j++){ x.beginPath(); x.arc(x0+disp, (j+.5)*H/rows, 3, 0, Math.PI*2); x.fill(); }
+    }
+    // highlight one particle: it only moves back and forth
+    const xi=(Math.floor(cols/2)+.5)*W/cols; const d=A*Math.sin(k*xi-w*t);
+    x.fillStyle='#fde047'; x.beginPath(); x.arc(xi+d, H/2, 6, 0, Math.PI*2); x.fill();
+    if(!reduce) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+
+/* =========================================================
+   Init
+   ========================================================= */
+(function init(){
+  if(store.get('sq-dark',false)) document.body.classList.add('dark');
+  $('#muteBtn').textContent = muted?'🔕':'🔔';
+  const n=store.get('sq-name',''); if(n) $('#playerName').value=n;
+  $('#playerName').addEventListener('change',e=>store.set('sq-name',e.target.value.trim()));
+  // ?mode=quiz|beats|tuning  &topic=speed ... lets a teacher link straight to one activity
+  const p=new URLSearchParams(location.search);
+  if(p.get('topic') && (TOPICS[p.get('topic')]||p.get('topic')==='all')) quiz.topic=p.get('topic');
+  const m=p.get('mode');
+  if(m==='quiz') openTopics(); else if(m==='beats') show('s-beats'), newBeatRoundPreview(); else if(m==='tuning') show('s-tuning'), newTuneRoundPreview();
+  setTimeout(notifyHeight,300);
+})();
+function newBeatRoundPreview(){ $('#againBtn').onclick=startBeats; Object.assign(beat,{round:0,score:0,correct:0}); newBeatRound(); }
+function newTuneRoundPreview(){ $('#againBtn').onclick=startTuning; Object.assign(tune,{round:0,score:0,correct:0}); newTuneRound(); }
+</script>
+</body>
+</html>
