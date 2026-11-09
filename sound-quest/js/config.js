@@ -9,7 +9,7 @@ SQ.config = {
      และบันทึกประวัติการเล่นรายบุคคลลง Google Sheets (ดูวิธีติดตั้งใน gas/SoundQuest.gs)
      ใส่ URL เว็บแอป Apps Script (ลงท้ายด้วย /exec) เพื่อเปิดใช้ · เว้นว่าง = เก็บในเครื่องอย่างเดียว */
   school: {
-    apiUrl: ''               // เช่น 'https://script.google.com/macros/s/XXXXXXXX/exec'
+    apiUrl: 'https://script.google.com/macros/s/AKfycbxmGqcNX4W2qWovzHMyJc1gTs7oQVusxFFJirz9oH3UkK0YUYBKqc1kR_THHgM1WsYY/exec'               // เช่น 'https://script.google.com/macros/s/XXXXXXXX/exec'
   },
   passRatio: 0.6,            // ต้องทำถูก ≥ 60% ของภารกิจในด่าน จึงผ่านด่านและปลดล็อกด่านถัดไป
   missionAttempts: 3,        // จำนวนครั้งที่ส่งคำตอบภารกิจทดลองได้
