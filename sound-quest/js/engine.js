@@ -139,15 +139,148 @@
       const pct = next ? (P.xp - r.xp) / (next.xp - r.xp) : 1;
       $('#chipXpFill').style.width = Math.round(pct * 100) + '%';
     }
+    const chip = $('#syncChip');
+    if (chip) { chip.hidden = !(has && SQ.store.isSchool()); if (!chip.hidden) showSync(SQ.store.syncStatus()); }
     const on = SQ.audio.enabled();
     $('#sfxBtn').firstChild.textContent = on ? '🔊' : '🔇';
     $('#sfxBtn').setAttribute('aria-pressed', String(on));
   }
 
+  const SYNC_TEXT = { idle: '☁️ ออนไลน์', saving: '⏳ กำลังบันทึก...', saved: '☁️ บันทึกแล้ว', offline: '⚠️ ออฟไลน์ · จะบันทึกอัตโนมัติ', expired: '🔐 แตะเพื่อเข้าสู่ระบบอีกครั้ง' };
+  function showSync(s) {
+    const chip = $('#syncChip'); if (!chip) return;
+    const t = SYNC_TEXT[s] || SYNC_TEXT.idle, i = t.indexOf(' ');
+    chip.replaceChildren(h('span', { text: t.slice(0, i) }), h('span', { class: 'sync-label', text: t.slice(i) }));
+    chip.title = t.slice(i + 1); chip.setAttribute('aria-label', t.slice(i + 1)); chip.dataset.state = s;
+  }
+
   /* =========================================================
      HOME
      ========================================================= */
+  function heroPanel(canvas) {
+    return h('div', { class: 'panel hero' }, corners(),
+      h('div', { class: 'tag violet', text: 'Science Adventure · Physics Puzzle · Interactive Quiz' }),
+      h('h1', { class: 'mt', text: 'SOUND QUEST' }),
+      h('div', { class: 'sub', text: 'ภารกิจพิชิตโลกแห่งเสียง' }),
+      h('p', { text: 'ฟิสิกส์ ม.5 เรื่องเสียง · 8 ด่าน · ทดลองจริง คิดจริง คำนวณจริง' }),
+      canvas);
+  }
+  function rulesPanel() {
+    return h('div', null,
+      h('div', { class: 'panel-title' }, h('span', { text: '📜 กติกาการเก็บ XP' })),
+      h('ul', { class: 'rules' },
+        h('li', null, 'ตอบปรนัยถูกครั้งแรก ', h('b', { class: 'xp-badge', text: `+${XP.mcq} XP` })),
+        h('li', null, 'แก้โจทย์คำนวณถูก ', h('b', { class: 'xp-badge', text: `+${XP.num} XP` })),
+        h('li', null, 'ทำภารกิจทดลองสำเร็จ ', h('b', { class: 'xp-badge', text: `+${XP.mission} XP` })),
+        h('li', null, 'ตอบถูกหลังใช้คำใบ้ ', h('b', { class: 'xp-badge', text: `+${XP.withHint} XP` })),
+        h('li', null, 'ผ่านด่านโดยไม่ใช้คำใบ้ โบนัส ', h('b', { class: 'xp-badge', text: `+${XP.levelBonus} XP` })),
+        h('li', null, 'ทำถูก ', h('b', { text: `≥ ${Math.round(CFG.passRatio * 100)}%` }), ' ของด่าน เพื่อปลดล็อกด่านถัดไป'),
+        h('li', null, 'XP ได้จากการตอบครั้งแรกของแต่ละข้อเท่านั้น เล่นซ้ำเพื่อฝึกและอัปเกรดเหรียญได้')));
+  }
+  function avatarPicker(initial) {
+    let chosen = initial || AVATARS[0].id;
+    const btns = AVATARS.map(a => h('button', {
+      type: 'button', class: 'avatar-opt', role: 'radio', 'aria-checked': String(a.id === chosen), 'aria-label': a.name,
+      onclick: () => { chosen = a.id; btns.forEach((b, i) => b.setAttribute('aria-checked', String(AVATARS[i].id === chosen))); SQ.sfx.select(); }
+    }, h('span', { class: 'avatar', text: a.emoji }), h('small', { text: a.name })));
+    return { el: h('div', { class: 'avatar-grid', role: 'radiogroup' }, btns), get value() { return chosen; } };
+  }
+
+  /* ---------- School mode: login with student ID + PIN ---------- */
+  function renderSchoolHome() {
+    run = null;
+    const heroCanvas = h('canvas', { 'aria-hidden': 'true' });
+    const student = SQ.store.student();
+    let left;
+    if (student && P) {
+      left = h('div', { class: 'panel tilt' }, corners(),
+        h('div', { class: 'panel-title' }, h('span', { text: '✅ เข้าสู่ระบบแล้ว' })),
+        h('div', { class: 'row' }, h('span', { class: 'avatar', text: avatarOf(P.avatar).emoji }),
+          h('div', null, h('b', { text: student.name }), h('div', { class: 'muted small', text: `เลขประจำตัว ${student.studentId} · ${student.classroom}` }))),
+        h('div', { class: 'actions' }, h('button', { class: 'btn', text: '🗺️ ไปที่แผนที่ภารกิจ', onclick: renderMap }), h('button', { class: 'btn ghost', text: '🚪 ออกจากระบบ', onclick: doLogout })));
+    } else if (student) {
+      // first time: choose an avatar
+      const pick = avatarPicker();
+      left = h('div', { class: 'panel tilt' }, corners(),
+        h('div', { class: 'panel-title' }, h('span', { text: '🧑‍🔬 ยินดีต้อนรับนักวิทยาศาสตร์คนใหม่' })),
+        h('p', null, h('b', { text: student.name }), h('span', { class: 'muted', text: `  · ${student.classroom} · เลขประจำตัว ${student.studentId}` })),
+        h('div', { class: 'field mt' }, h('label', { text: 'เลือก Avatar ของคุณ' }), pick.el),
+        h('div', { class: 'actions' },
+          h('button', { class: 'btn lg', text: '🚀 เริ่มภารกิจ', onclick: () => {
+            P = newProfile(student.name, pick.value);
+            P.id = 'stu-' + student.studentId; P.studentId = student.studentId; P.classroom = student.classroom;
+            save(); SQ.store.logEvent({ type: 'profile_created' });
+            SQ.sfx.unlock(); toast(`ยินดีต้อนรับ ${student.name}! ภารกิจแรกรออยู่บนแผนที่`); renderMap();
+          } }),
+          h('button', { class: 'btn ghost', text: 'ไม่ใช่ฉัน / ออกจากระบบ', onclick: doLogout })));
+    } else {
+      const idIn = h('input', { class: 'input', id: 'sidInput', inputmode: 'numeric', autocomplete: 'off', maxlength: 20, placeholder: 'เช่น 01997' });
+      const pinIn = h('input', { class: 'input', id: 'pinInput', type: 'password', inputmode: 'numeric', autocomplete: 'off', maxlength: 12, placeholder: 'รหัส PIN 6 หลักจากครู' });
+      const err = h('div', { class: 'feedback no', hidden: true, role: 'alert' });
+      const btn = h('button', { class: 'btn lg block mt2', text: '🔐 เข้าสู่ระบบ', onclick: go });
+      async function go() {
+        if (btn.disabled) return;
+        if (!idIn.value.trim() || !pinIn.value.trim()) { err.hidden = false; err.textContent = 'กรุณากรอกเลขประจำตัวและรหัส PIN'; return; }
+        btn.disabled = true; btn.textContent = '⏳ กำลังตรวจสอบ...'; err.hidden = true;
+        try {
+          const res = await SQ.store.login(idIn.value, pinIn.value);
+          P = res.profile || null;
+          if (P) { P.name = res.student.name; P.classroom = res.student.classroom; P.studentId = res.student.studentId; }
+          SQ.sfx.unlock(); renderTopbar();
+          if (P) { toast(`ยินดีต้อนรับกลับ ${res.student.name}!`); renderMap(); } else renderSchoolHome();
+        } catch (e) {
+          SQ.sfx.wrong();
+          err.hidden = false; err.textContent = e.server ? e.message : 'เชื่อมต่อระบบไม่ได้ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่';
+          btn.disabled = false; btn.textContent = '🔐 เข้าสู่ระบบ'; pinIn.value = ''; pinIn.focus();
+        }
+      }
+      [idIn, pinIn].forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter') go(); }));
+      left = h('div', { class: 'panel tilt' }, corners(),
+        h('div', { class: 'panel-title' }, h('span', { text: '🔐 เข้าสู่ระบบนักเรียน' })),
+        h('div', { class: 'field' }, h('label', { for: 'sidInput', text: 'เลขประจำตัวนักเรียน' }), idIn),
+        h('div', { class: 'field mt' }, h('label', { for: 'pinInput', text: 'รหัส PIN' }), pinIn),
+        err, btn,
+        h('p', { class: 'muted small mt', text: 'ใช้เลขประจำตัวเดียวกับระบบห้องเรียนออนไลน์ ลืมรหัส PIN ให้ติดต่อครู · ประวัติการเล่นบันทึกเป็นรายบุคคล เล่นต่อจากเครื่องไหนก็ได้' }));
+    }
+    setScreen(h('section', { class: 'screen' }, heroPanel(heroCanvas),
+      h('div', { class: 'grid2 mt2' }, left, h('div', { class: 'panel' }, corners(), rulesPanel()))));
+    SQ._heroAnim = heroWave(heroCanvas);
+    const f = $('#sidInput'); if (f) f.focus();
+  }
+
+  async function doLogout() {
+    const finish = async () => { await SQ.store.logout(); P = null; run = null; renderTopbar(); toast('ออกจากระบบแล้ว'); renderSchoolHome(); };
+    if (SQ.store.pending()) {
+      toast('⏳ กำลังบันทึกข้อมูลล่าสุด...');
+      await SQ.store.syncNow();
+      if (SQ.store.pending()) return confirmBox('ยังบันทึกข้อมูลไม่สำเร็จ', 'ขณะนี้เชื่อมต่อระบบไม่ได้ ถ้าออกจากระบบตอนนี้ ความคืบหน้าล่าสุดที่ยังไม่ได้บันทึกจะหายไป', 'ออกจากระบบเลย', finish, true);
+    }
+    finish();
+  }
+
+  function openRelogin() {
+    const st = SQ.store.student();
+    if (!st || !$('#modal').hidden) return;
+    const pinIn = h('input', { class: 'input', type: 'password', inputmode: 'numeric', autocomplete: 'off', placeholder: 'รหัส PIN' });
+    const err = h('div', { class: 'feedback no', hidden: true });
+    const btn = h('button', { class: 'btn', text: '🔐 เข้าสู่ระบบ', onclick: async () => {
+      btn.disabled = true; err.hidden = true;
+      try {
+        const res = await SQ.store.login(st.studentId, pinIn.value);
+        if (res.profile) P = res.profile;
+        closeModal(); renderTopbar(); toast('เข้าสู่ระบบอีกครั้งแล้ว กำลังบันทึกข้อมูล ☁️');
+      } catch (e) { err.hidden = false; err.textContent = e.server ? e.message : 'เชื่อมต่อระบบไม่ได้'; btn.disabled = false; }
+    } });
+    pinIn.addEventListener('keydown', e => { if (e.key === 'Enter') btn.click(); });
+    openModal(h('div', { class: 'panel' },
+      h('h2', { text: '🔐 หมดเวลาการเข้าสู่ระบบ' }),
+      h('p', { class: 'muted', text: `เพื่อบันทึกความคืบหน้าต่อ กรุณาใส่รหัส PIN ของ ${st.name} (${st.studentId}) อีกครั้ง ข้อมูลที่เล่นไปยังอยู่ครบ` }),
+      pinIn, err, h('div', { class: 'actions' }, btn)));
+    pinIn.focus();
+  }
+
   function renderHome() {
+    if (SQ.store.isSchool()) return renderSchoolHome();
     run = null;
     let chosen = AVATARS[0].id;
     const nameInput = h('input', { class: 'input', id: 'nameInput', maxlength: 30, placeholder: 'เช่น ม.5/2 เลขที่ 15 ด.ญ.ใจดี', autocomplete: 'off' });
@@ -264,7 +397,9 @@
     const node = h('section', { class: 'screen' },
       h('div', { class: 'row spread' },
         h('div', null, h('div', { class: 'tag', text: 'MISSION MAP' }), h('h2', { class: 'mt', text: '🗺️ แผนที่ภารกิจโลกแห่งเสียง' })),
-        h('div', { class: 'row' }, h('button', { class: 'btn ghost sm', text: '📊 สรุปผล', onclick: renderSummary }), h('button', { class: 'btn ghost sm', text: '👤 เปลี่ยนผู้เล่น', onclick: () => { P = null; SQ.store.setCurrent(null); renderTopbar(); renderHome(); } }))),
+        h('div', { class: 'row' }, h('button', { class: 'btn ghost sm', text: '📊 สรุปผล', onclick: renderSummary }), SQ.store.isSchool()
+          ? h('button', { class: 'btn ghost sm', text: '🚪 ออกจากระบบ', onclick: doLogout })
+          : h('button', { class: 'btn ghost sm', text: '👤 เปลี่ยนผู้เล่น', onclick: () => { P = null; SQ.store.setCurrent(null); renderTopbar(); renderHome(); } }))),
       h('div', { class: 'panel mt' }, corners(),
         h('div', { class: 'row spread' },
           h('div', { class: 'row' }, h('span', { class: 'avatar', text: avatarOf(P.avatar).emoji }),
@@ -620,7 +755,7 @@
       h('div', { class: 'actions', style: { justifyContent: 'center' } },
         h('button', { class: 'btn', text: '🗺️ กลับแผนที่', onclick: renderMap }),
         h('button', { class: 'btn ghost', text: '🖨️ พิมพ์/บันทึกผล', onclick: () => window.print() }),
-        h('button', { class: 'btn danger', text: '🔁 เล่นใหม่ตั้งแต่ต้น', onclick: () => confirmBox('เริ่มเกมใหม่ทั้งหมด?', 'XP เหรียญ และด่านที่ปลดล็อกของผู้เล่นนี้จะถูกรีเซ็ตเป็นค่าเริ่มต้น', 'รีเซ็ตและเริ่มใหม่', resetProgress, true) })));
+        SQ.store.isSchool() ? null : h('button', { class: 'btn danger', text: '🔁 เล่นใหม่ตั้งแต่ต้น', onclick: () => confirmBox('เริ่มเกมใหม่ทั้งหมด?', 'XP เหรียญ และด่านที่ปลดล็อกของผู้เล่นนี้จะถูกรีเซ็ตเป็นค่าเริ่มต้น', 'รีเซ็ตและเริ่มใหม่', resetProgress, true) })));
     setScreen(node);
     requestAnimationFrame(() => $$('.fill[data-w]').forEach(f => f.style.width = f.dataset.w));
   }
@@ -647,6 +782,11 @@
       $('#sfxBtn').addEventListener('click', () => { SQ.store.saveSettings({ sfx: !SQ.audio.enabled() }); renderTopbar(); SQ.sfx.click(); });
       $('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
       document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#modal').hidden) closeModal(); });
+      if (SQ.store.isSchool()) {
+        SQ.store.onSyncStatus(s => { showSync(s); if (s === 'expired') openRelogin(); });
+        $('#syncChip').addEventListener('click', () => { if (SQ.store.syncStatus() === 'expired') openRelogin(); else SQ.store.syncNow(); });
+        $('#footerMode').textContent = ' · โหมดห้องเรียน (บันทึกออนไลน์รายบุคคล)';
+      }
       renderTopbar();
       if (P) renderMap(); else renderHome();
     },

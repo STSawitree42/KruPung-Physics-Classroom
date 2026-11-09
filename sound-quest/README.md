@@ -28,10 +28,11 @@ sound-quest/
 ├─ netlify.toml          ค่า Deploy
 ├─ css/style.css         ธีม Futuristic Lab (Dark Navy + Neon Cyan)
 ├─ assets/favicon.svg
+├─ gas/SoundQuest.gs     ไฟล์เสริมสำหรับระบบห้องเรียนออนไลน์ (Apps Script) + gas/README.md วิธีติดตั้ง
 └─ js/
    ├─ config.js          ค่าตั้งเกม: XP, เกณฑ์ผ่านด่าน, การเชื่อมฐานข้อมูล
    ├─ lib.js             ตัวช่วย DOM, ตรวจคำตอบตัวเลข, Canvas
-   ├─ storage.js         ชั้นข้อมูล (localStorage + โครง Remote API)
+   ├─ storage.js         ชั้นข้อมูล (localStorage หรือโหมดห้องเรียนผ่าน Apps Script)
    ├─ audio.js           เสียงเอฟเฟกต์ + เครื่องกำเนิดเสียงสำหรับภารกิจ
    ├─ engine.js          ระบบเกม: ผู้เล่น/Avatar, แผนที่, XP, คำใบ้, ปลดล็อก, เหรียญ
    ├─ levels/levelN.js   คลังคำถาม + ภารกิจทดลองของแต่ละด่าน
@@ -72,12 +73,15 @@ sound-quest/
         allow="autoplay; fullscreen" allowfullscreen title="SOUND QUEST"></iframe>
 ```
 
-## เชื่อมต่อฐานข้อมูลภายหลัง
-ทุกส่วนของเกมอ่าน/เขียนข้อมูลผ่าน `SQ.store` ใน `js/storage.js` เท่านั้น
-1. ตั้ง `storage: 'remote'` และ `apiBaseUrl` ใน `js/config.js`
-2. เกมจะ POST JSON ไปที่ API: `{action:'saveProfile', profile}` และ `{action:'logEvent', event}`
-   (event มี `type` = `answer`, `level_start`, `level_end`, `profile_created`, `reset`)
-3. localStorage ยังเป็นข้อมูลหลัก เกมจึงเล่นต่อได้แม้เน็ตหลุด
+## โหมดห้องเรียน: เข้าด้วยเลขประจำตัว + PIN และบันทึกรายบุคคล
+เชื่อมกับระบบห้องเรียนออนไลน์ (Google Apps Script + Google Sheets) ของครู
+นักเรียนล็อกอินด้วยเลขประจำตัวจากชีต Students + PIN 6 หลัก ประวัติการเล่นบันทึกลงชีตของครู เล่นต่อจากเครื่องไหนก็ได้
+ดูวิธีติดตั้งทีละขั้นที่ [`gas/README.md`](gas/README.md)
+
+- ไม่ใส่ `school.apiUrl` ใน `js/config.js` → เกมทำงานแบบเดิม (เก็บในเครื่อง ตั้งชื่อเอง)
+- ใส่ `school.apiUrl` → เปิดโหมดห้องเรียนอัตโนมัติ
+
+ทุกส่วนของเกมอ่าน/เขียนข้อมูลผ่าน `SQ.store` ใน `js/storage.js` จึงเปลี่ยนไปใช้ฐานข้อมูลอื่นได้ภายหลัง
 
 ## เพิ่ม/แก้คำถาม
 แก้ใน `js/levels/levelN.js` ทุกข้อมีฟิลด์:
@@ -87,5 +91,5 @@ sound-quest/
 
 ## ข้อจำกัดของต้นแบบ
 - คำตอบและการตรวจอยู่ในฝั่งเบราว์เซอร์ นักเรียนที่เปิด DevTools เป็นสามารถดูเฉลยได้ ถ้าต้องการใช้เก็บคะแนนจริงอย่างเข้มงวด ควรย้ายการตรวจคำตอบไปที่เซิร์ฟเวอร์ผ่านชั้น `SQ.store`
-- ความคืบหน้าเก็บใน localStorage ของอุปกรณ์/เบราว์เซอร์ที่เล่น ล้างข้อมูลเบราว์เซอร์แล้วจะหาย
+- โหมดปกติ: ความคืบหน้าเก็บใน localStorage ของอุปกรณ์/เบราว์เซอร์ที่เล่น ล้างข้อมูลเบราว์เซอร์แล้วจะหาย (โหมดห้องเรียนไม่มีปัญหานี้)
 - ภารกิจด่าน 3, 5, 6, 7, 8 มีเสียงประกอบ (ใช้ลำโพง/หูฟังจะดีที่สุด) แต่ทุกภารกิจทำสำเร็จได้จากภาพและตัวเลขบนจอ
