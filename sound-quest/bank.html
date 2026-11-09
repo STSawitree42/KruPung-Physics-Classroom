@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>คลังข้อสอบ SOUND QUEST (สำหรับครู)</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .bank-q{padding:14px 16px;border-radius:14px;border:1px solid var(--line);background:rgba(3,10,28,.45);margin-top:10px}
+  .bank-q .p{font-weight:500;margin:8px 0;white-space:pre-line;line-height:1.6}
+  .bank-q ol{margin:6px 0 6px 22px;color:var(--muted)}
+  .bank-q li.ok{color:var(--good);font-weight:600}
+  .bank-q .exp{white-space:pre-line;color:var(--muted);font-size:.92rem;line-height:1.6;margin-top:6px}
+  .bank-q .ans{color:var(--good);font-weight:600}
+  .filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .filters select{padding:8px 10px;border-radius:10px;background:rgba(3,10,28,.7);border:1px solid var(--line-strong);color:var(--ink)}
+  @media print{ .bank-q{border:1px solid #999;background:#fff;color:#000;break-inside:avoid} .bank-q ol,.bank-q .exp{color:#222} .bank-q li.ok,.bank-q .ans{color:#000;text-decoration:underline} }
+</style>
+</head>
+<body>
+<div class="bg-grid" aria-hidden="true"></div>
+<main class="main">
+  <div class="panel">
+    <div class="tag">TEACHER ONLY</div>
+    <h2 class="mt">📚 คลังข้อสอบ SOUND QUEST: ภารกิจพิชิตโลกแห่งเสียง</h2>
+    <p class="muted">หน้านี้แสดงคำตอบและคำอธิบายทุกข้อ สำหรับครูใช้ตรวจสอบและวางแผนการสอน (ไม่ได้ลิงก์จากหน้าเกม)</p>
+    <div class="kpis" id="stats"></div>
+    <div class="filters mt">
+      <select id="fLevel" aria-label="กรองตามด่าน"></select>
+      <select id="fType" aria-label="กรองตามประเภท"><option value="">ทุกประเภท</option><option value="mcq">ปรนัย 4 ตัวเลือก</option><option value="num">โจทย์คำนวณ</option><option value="mission">ภารกิจทดลอง</option></select>
+      <select id="fDiff" aria-label="กรองตามความยาก"><option value="">ทุกระดับความยาก</option><option>ง่าย</option><option>ปานกลาง</option><option>ยาก</option></select>
+      <select id="fBloom" aria-label="กรองตามระดับพฤติกรรม"><option value="">ทุกระดับพฤติกรรม</option><option>ความรู้</option><option>ความเข้าใจ</option><option>การประยุกต์</option><option>การวิเคราะห์</option><option>การคำนวณ</option></select>
+      <span class="grow"></span>
+      <button class="btn sm ghost" onclick="window.print()">🖨️ พิมพ์</button>
+      <button class="btn sm" id="exportBtn">⬇️ ดาวน์โหลด JSON</button>
+      <a class="btn sm ghost" href="./">🎮 กลับไปที่เกม</a>
+    </div>
+  </div>
+  <div id="list" class="mt"></div>
+</main>
+<script src="js/config.js"></script>
+<script src="js/lib.js"></script>
+<script>
+  // Collect levels without starting the game engine
+  SQ.levels = {};
+  SQ.registerLevel = l => { SQ.levels[l.id] = l; };
+</script>
+<script src="js/levels/level1.js"></script>
+<script src="js/levels/level2.js"></script>
+<script src="js/levels/level3.js"></script>
+<script src="js/levels/level4.js"></script>
+<script src="js/levels/level5.js"></script>
+<script src="js/levels/level6.js"></script>
+<script src="js/levels/level7.js"></script>
+<script src="js/levels/level8.js"></script>
+<script>
+(function () {
+  const { h, $, fmt } = SQ.lib;
+  const levels = Object.values(SQ.levels).sort((a, b) => a.id - b.id);
+  const all = [];
+  levels.forEach(L => {
+    L.questions.forEach(q => all.push({ level: L.id, levelTitle: L.title, ...q }));
+    (L.missions || []).forEach(m => all.push({ level: L.id, levelTitle: L.title, type: 'mission', id: m.id, difficulty: m.difficulty, bloom: m.bloom, topic: m.topic, points: m.points, prompt: (m.title ? m.title + '\n' : '') + m.prompt, hint: m.hint, explanation: m.explanation }));
+  });
+  const qCount = all.filter(q => q.type !== 'mission').length;
+  $('#stats').append(
+    h('div', { class: 'kpi' }, h('b', { text: levels.length }), h('span', { text: 'ด่าน' })),
+    h('div', { class: 'kpi' }, h('b', { text: qCount }), h('span', { text: 'คำถาม' })),
+    h('div', { class: 'kpi' }, h('b', { text: all.filter(q => q.type === 'num').length }), h('span', { text: 'โจทย์คำนวณ' })),
+    h('div', { class: 'kpi' }, h('b', { text: all.filter(q => q.type === 'mission').length }), h('span', { text: 'ภารกิจทดลอง' })));
+  const fl = $('#fLevel');
+  fl.append(h('option', { value: '', text: 'ทุกด่าน' }), ...levels.map(L => h('option', { value: L.id, text: `LEVEL ${L.id}: ${L.title} (${L.th})` })));
+  const typeName = { mcq: 'ปรนัย 4 ตัวเลือก', num: 'โจทย์คำนวณ', mission: 'ภารกิจทดลอง' };
+  function render() {
+    const lv = fl.value, ty = $('#fType').value, df = $('#fDiff').value, bl = $('#fBloom').value;
+    const rows = all.filter(q => (!lv || q.level == lv) && (!ty || q.type === ty) && (!df || q.difficulty === df) && (!bl || q.bloom === bl));
+    $('#list').replaceChildren(h('p', { class: 'muted', text: `แสดง ${rows.length} รายการ` }), ...rows.map(q => h('div', { class: 'bank-q' },
+      h('div', { class: 'tags' },
+        h('span', { class: 'tag', text: q.id }), h('span', { class: 'tag', text: `LEVEL ${q.level}` }),
+        h('span', { class: 'tag', text: typeName[q.type] }),
+        h('span', { class: 'tag ' + (q.difficulty === 'ง่าย' ? 'easy' : q.difficulty === 'ยาก' ? 'hard' : 'mid'), text: q.difficulty }),
+        h('span', { class: 'tag violet', text: q.bloom }), h('span', { class: 'tag', text: '📚 ' + q.topic }), h('span', { class: 'tag', text: `⭐ ${q.points} XP` })),
+      h('div', { class: 'p', text: q.prompt }),
+      q.type === 'mcq' ? h('ol', { type: 'A' }, q.choices.map((c, i) => h('li', { class: i === q.answer ? 'ok' : '', text: c + (i === q.answer ? '  ✔' : '') }))) : null,
+      q.type === 'num' ? h('div', { class: 'ans', text: `คำตอบ: ${fmt(q.answer, 4)} ${q.unit || ''}  (ยอมรับ ${q.tol && q.tol.abs != null ? '±' + q.tol.abs + ' ' + (q.unit || '') : '±' + Math.round(((q.tol && q.tol.rel) != null ? q.tol.rel : 0.02) * 1000) / 10 + '%'})` }) : null,
+      q.type === 'mission' ? h('div', { class: 'ans', text: 'ภารกิจทดลองแบบโต้ตอบ: ค่าตัวแปรสุ่มใหม่ทุกครั้ง ระบบตรวจผลอัตโนมัติ ส่งผลได้ ' + SQ.config.missionAttempts + ' ครั้ง' }) : null,
+      h('div', { class: 'exp', text: '💡 คำใบ้: ' + q.hint }),
+      h('div', { class: 'exp', text: '📖 คำอธิบาย: ' + q.explanation }))));
+  }
+  ['#fLevel', '#fType', '#fDiff', '#fBloom'].forEach(s => $(s).addEventListener('change', render));
+  $('#exportBtn').addEventListener('click', () => {
+    const data = all.map(({ level, levelTitle, id, type, difficulty, bloom, topic, points, prompt, choices, answer, unit, tol, hint, explanation }) =>
+      ({ level, levelTitle, id, type, difficulty, bloom, topic, points, prompt, choices, answer, correctText: type === 'mcq' ? choices[answer] : undefined, unit, tol, hint, explanation }));
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = h('a', { href: URL.createObjectURL(blob), download: 'sound-quest-question-bank.json' }); document.body.append(a); a.click(); a.remove();
+  });
+  render();
+})();
+</script>
+</body>
+</html>
