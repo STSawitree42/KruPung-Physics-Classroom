@@ -15,6 +15,7 @@
  *     (URL เว็บแอปเดิมไม่เปลี่ยน)
  *  4) นำ URL เว็บแอป (ลงท้ายด้วย /exec) ไปใส่ใน sound-quest/js/config.js ที่ school.apiUrl
  *
+ *  จำกัดระดับชั้น: แก้ SQ_ALLOWED_CLASSES ด้านล่าง (ค่าเริ่มต้น เฉพาะ ม.5)
  *  ภายหลังมีนักเรียนใหม่: เพิ่มในระบบตามปกติ แล้วเรียกใช้ sqGeneratePins อีกครั้ง
  *  (สร้าง PIN ให้เฉพาะคนที่ยังไม่มี) · เปลี่ยน PIN รายคน: แก้ในชีต SQ_Pins ได้เลย
  * ============================================================
@@ -37,6 +38,11 @@ var SQ_TOKEN_SECONDS = 6 * 3600;   // อายุการเข้าสู่
 var SQ_MAX_FAILS = 5;              // ใส่ PIN ผิดได้กี่ครั้ง
 var SQ_LOCK_SECONDS = 10 * 60;     // ล็อกชั่วคราวหลังใส่ผิดครบ
 var SQ_MAX_PROFILE = 45000;        // ขนาดข้อมูลสูงสุดต่อคน (ตัวอักษร)
+
+/* ระดับชั้นที่เล่นเกมได้: ตรวจจากคอลัมน์ classroom ในชีต Students
+   ห้องที่ "ขึ้นต้น" ด้วยค่าในรายการนี้จะเล่นได้ (ไม่สนใจช่องว่างและจุด เช่น "ม.5/1", "ม. 5/2", "ม5/3")
+   เพิ่มระดับชั้นได้ เช่น ['ม.5', 'ม.6'] · เว้นเป็น [] = ทุกระดับชั้นเล่นได้ */
+var SQ_ALLOWED_CLASSES = ['ม.5'];
 
 /* ======================= รับคำขอจากเกม ======================= */
 
@@ -75,6 +81,7 @@ function sqLogin_(studentId, pin) {
   if (!str_(studentId) || !str_(pin)) throw new Error('กรุณากรอกเลขประจำตัวและรหัส PIN');
   var st;
   try { st = findStudent_(studentId); } catch (e) { bad(); }
+  if (!sqAllowed_(st)) throw new Error('เกมนี้เปิดให้เฉพาะนักเรียน ' + SQ_ALLOWED_CLASSES.join(', ') + ' หากเลขประจำตัวถูกต้องแต่เข้าไม่ได้ กรุณาติดต่อครู');
   var pinRow = sqRead_(SQ_DEF.PINS).filter(function (r) { return sameId_(r.studentId, st.studentId); })[0];
   if (!pinRow || !str_(pinRow.pin)) throw new Error('ยังไม่มีรหัส PIN สำหรับเลขประจำตัวนี้ กรุณาติดต่อครู');
   if (str_(pin) !== str_(pinRow.pin)) bad();
@@ -97,7 +104,21 @@ function sqLogin_(studentId, pin) {
 function sqAuth_(token) {
   var sid = token ? CacheService.getScriptCache().get('SQ_' + str_(token)) : null;
   if (!sid) throw new Error('SESSION_EXPIRED');
-  return findStudent_(sid);
+  var st = findStudent_(sid);
+  if (!sqAllowed_(st)) throw new Error('SESSION_EXPIRED');
+  return st;
+}
+
+/** นักเรียนอยู่ในระดับชั้นที่เปิดให้เล่นหรือไม่ */
+function sqAllowed_(st) {
+  if (!SQ_ALLOWED_CLASSES || !SQ_ALLOWED_CLASSES.length) return true;
+  var norm = function (v) { return str_(v).replace(/[\s.]/g, '').toLowerCase(); };
+  var room = norm(st && st.classroom);
+  return SQ_ALLOWED_CLASSES.some(function (c) {
+    var p = norm(c);
+    // "ม5" ต้องตามด้วย / หรือจบคำ จึงไม่ปนกับ "ม51"
+    return room === p || room.indexOf(p + '/') === 0;
+  });
 }
 
 /* ======================= บันทึกความคืบหน้า ======================= */
@@ -172,7 +193,7 @@ function sqGeneratePins() {
     var created = 0, now = new Date().toISOString();
     students.forEach(function (s) {
       var sid = str_(s.studentId);
-      if (!sid) return;
+      if (!sid || !sqAllowed_(s)) return;          // สร้าง PIN เฉพาะระดับชั้นที่เปิดให้เล่น
       var ex = byId[idKey_(sid)];
       var row = { studentId: sid, name: str_(s.name), classroom: str_(s.classroom), number: str_(s.number),
         pin: ex && str_(ex.pin) ? str_(ex.pin) : sqNewPin_(), updatedAt: ex && str_(ex.pin) ? str_(ex.updatedAt) : now };
@@ -182,6 +203,13 @@ function sqGeneratePins() {
       sqWrite_(SQ_DEF.PINS, ex ? ex._row : null, row);
       if (!ex) byId[idKey_(sid)] = row;
     });
+    // ลบ PIN ของนักเรียนที่ไม่อยู่ในระดับชั้นที่เปิดให้เล่น หรือไม่มีในชีต Students แล้ว
+    var keep = {};
+    students.forEach(function (s) { if (str_(s.studentId) && sqAllowed_(s)) keep[idKey_(s.studentId)] = 1; });
+    var sh = sqSheet_(SQ_DEF.PINS);
+    pins.filter(function (p) { return !keep[idKey_(p.studentId)]; })
+      .map(function (p) { return p._row; }).sort(function (a, b) { return b - a; })
+      .forEach(function (r) { sh.deleteRow(r); });
     return created;
   });
 }
