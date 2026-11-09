@@ -77,7 +77,7 @@
     const st = { w: 0, h: height, ctx, raf: 0, running: false, t0: performance.now(), draw };
     function resize() {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      st.w = canvas.clientWidth || canvas.parentElement.clientWidth || 600;
+      st.w = canvas.clientWidth || (canvas.parentElement && canvas.parentElement.clientWidth) || 600;
       canvas.style.height = st.h + 'px';
       canvas.width = Math.round(st.w * dpr); canvas.height = Math.round(st.h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
