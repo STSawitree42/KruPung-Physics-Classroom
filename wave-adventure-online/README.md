@@ -17,36 +17,41 @@
 ## เอกสาร
 | ไฟล์ | เนื้อหา |
 |---|---|
-| `FIREBASE_SETUP.md` | ตั้งค่า Firebase (⚠ ต้องใช้แพ็กเกจ Blaze) |
+| `FIREBASE_SETUP.md` | ตั้งค่า Firebase แบบฟรี 100% (แพ็กเกจ Spark ไม่ต้องผูกบัตร) |
 | `DEPLOYMENT_GUIDE.md` | นำขึ้น Netlify + ตรวจสอบหลัง Deploy + แก้ปัญหา |
 | `TEST_REPORT.md` | ผลการทดสอบ Acceptance Tests 1–20 |
 | `ASSET_ANALYSIS.md` | วิเคราะห์ไฟล์ต้นฉบับ กระดาน และการตรวจเฉลย |
 | `.env.example` | ตัวแปรที่ Frontend ต้องใช้ |
 
-## ความปลอดภัย (Server-authoritative)
-- Frontend ส่งได้แค่ “คำสั่ง” (ทอย, ตอบ, เลือก) ผ่าน Cloud Functions · **ลูกเต๋า คะแนน ตำแหน่ง ตัดสินที่เซิร์ฟเวอร์เท่านั้น**
-- Realtime Database **ปฏิเสธการเขียนตรงทั้งหมด** ยกเว้นสถานะออนไลน์ของตนเอง (ดู `database.rules.json`)
-- **เฉลยไม่ถูกส่งไปที่เครื่องนักเรียน** จนกว่าจะตอบแล้ว (เก็บใน `rooms/{id}/secret` ซึ่งไม่มีใครอ่านได้)
-- ทุกคำสั่งมี `requestId` ป้องกันกดซ้ำได้คะแนนซ้ำ · มี rate limit · ผู้เล่นทำได้เฉพาะตาของตนเอง
+## ความปลอดภัย (Host-authoritative · ฟรี ไม่ใช้ Cloud Functions)
+- **เครื่องครูเป็นผู้ตัดสินเกม**: หน้าควบคุมห้องที่ครูเปิดอยู่รัน Host Runtime (`src/host/hostRuntime.ts`) ทอยลูกเต๋า (crypto RNG) ตรวจคำตอบ ให้คะแนน และตรวจหมดเวลา
+- นักเรียนส่งได้แค่ “คำสั่ง” ของตัวเองลง `inbox/{ห้อง}/{uid}` · Rules **ห้ามนักเรียนเขียนสถานะเกม** คะแนน ตำแหน่ง ลูกเต๋า หรือส่งคำสั่งในนามคนอื่น
+- **เฉลยไม่ถูกส่งไปที่เครื่องนักเรียน** จนกว่าจะตอบแล้ว (อยู่ใน `content` และ `rooms/{id}/secret` ที่อ่านได้เฉพาะครู) และ **ไม่ได้ฝังอยู่ในโค้ดเว็บ**
+- ทุกคำสั่งมี `requestId` ป้องกันกดซ้ำได้คะแนนซ้ำ · ผู้เล่นทำได้เฉพาะตาของตนเอง
+- สิทธิ์ครูมาจากรายชื่ออีเมลใน `config/teacherEmails` ที่แก้ได้จาก Firebase Console เท่านั้น
+- เลขประจำตัวนักเรียนยืนยันโดย Apps Script (ตรวจ PIN + ตรวจบัญชีเกมด้วย idToken) แล้วเขียน `studentLinks/{uid}` — นักเรียนปลอมเลขประจำตัวเองไม่ได้
 - รหัสห้องใช้ค้นหาห้องเท่านั้น ไม่ใช่สิทธิ์เข้าถึง · เก็บข้อมูลนักเรียนน้อยที่สุด (ชื่อกลุ่ม, Avatar, คะแนน; เลขประจำตัวเฉพาะเมื่อใช้การเข้าสู่ระบบโรงเรียน)
+- ข้อแลกเปลี่ยน: **ครูต้องเปิดหน้าควบคุมห้องค้างไว้ระหว่างเล่น** ถ้าปิด เกมหยุดรอและเล่นต่อได้เมื่อเปิดใหม่
 
 ## โครงสร้างโปรเจกต์
 ```
 wave-adventure-online/
-├─ shared/                 ใช้ร่วมกันทั้ง Frontend และ Backend (TypeScript)
+├─ shared/                 ใช้ร่วมกันทั้งหน้าเว็บและ Host Runtime (TypeScript)
 │  ├─ types.ts             โมเดลข้อมูลทั้งหมด
 │  ├─ board.config.ts      พิกัดช่องกระดาน (normalized 0–1)
 │  ├─ rules.config.ts      ค่ากติกาเริ่มต้น (GameSettings)
 │  ├─ engine.ts            เครื่องสถานะเกม (pure function, ทดสอบได้)
+│  ├─ commands.ts          แปลงคำสั่งผู้เล่น/ครู → Game Engine
 │  ├─ content.ts           ตรวจข้อมูลการ์ด/คำถาม + ตรวจคำตอบ
-│  ├─ defaults.ts, data/    ชุดคำถาม 50 ข้อ + การ์ดต้นฉบับ (มีเฉลย → ใช้ฝั่ง Backend เท่านั้น)
+│  ├─ defaults.ts, data/    ชุดคำถาม 50 ข้อ + การ์ดต้นฉบับ (มีเฉลย → ไม่ถูกรวมในเว็บ)
 │  └─ waveTypes.ts         ป้ายชื่อประเภทคลื่น (ปลอดภัยสำหรับ Frontend)
-├─ functions/src/index.ts  Cloud Functions 16 ตัว (asia-southeast1)
-├─ database.rules.json     Security Rules
+├─ setup/wave-content.json ชุดเริ่มต้นพร้อมเฉลย สำหรับครูนำเข้าครั้งแรก (`npm run content` สร้างใหม่)
+├─ database.rules.json     Security Rules (วางใน Firebase Console)
 ├─ src/                    Frontend React + Tailwind + Motion
 │  ├─ pages/               Home, Room (Lobby/เกม/สรุปผล), Teacher, BoardEditor, SettingsForm
 │  ├─ components/          ui.tsx (ทั่วไป), game.tsx (กระดาน, ลูกเต๋า, การ์ด)
-│  ├─ services/            api.ts (เรียก Functions), content.ts (คลังเนื้อหาของครู)
+│  ├─ host/hostRuntime.ts  "เซิร์ฟเวอร์ของเกม" บนเครื่องครู
+│  ├─ services/            api.ts (ส่งคำสั่ง/รอผล), content.ts (คลังเนื้อหาของครู)
 │  └─ hooks/useFirebase.ts ติดตามห้องแบบ realtime + สถานะออนไลน์
 ├─ public/assets/          ภาพกระดานและการ์ดต้นฉบับ (WebP)
 └─ tests/                  unit / integration (Emulator) / e2e (Playwright)
@@ -55,10 +60,10 @@ wave-adventure-online/
 ## เปิดใช้งานในเครื่อง (ไม่ต้องมีบัญชี Firebase)
 ```bash
 cd wave-adventure-online
-npm ci && npm --prefix functions ci
-npm --prefix functions run build
-npx firebase emulators:start --project demo-wave-adventure --only auth,database,functions
+npm ci
+npx firebase emulators:start --project demo-wave-adventure --only auth,database
 # อีกหน้าต่าง
+node tests/e2e/seed.mjs         # ให้สิทธิ์ครูทดสอบ + นำเข้าชุดการ์ด
 npm run dev:emulator            # → http://127.0.0.1:5173
 ```
 หน้า “ครู” มีปุ่มเข้าสู่ระบบทดสอบ (`teacher@school.test`)
@@ -72,18 +77,19 @@ Teacher Dashboard →
 - **กติกา**: ค่าเริ่มต้นของห้องใหม่ · **แก้พิกัดกระดาน**: ลากจุดบนภาพ
 
 **แบบที่ 2 — แก้ชุดเริ่มต้นในโค้ด**
-แก้ `shared/data/questions.ts`, `situationCards.ts`, `specialCards.ts` แล้วรัน `npm test` และ deploy functions ใหม่
-(ชุดเริ่มต้นใช้เมื่อครูยังไม่เคยบันทึกคลังลงฐานข้อมูล)
+แก้ `shared/data/questions.ts`, `situationCards.ts`, `specialCards.ts` → `npm run content` (สร้าง `setup/wave-content.json` ใหม่) → `npm test`
+แล้วนำเข้าไฟล์ใหม่ที่ Teacher Dashboard (รายการที่มีอยู่แล้วจะไม่ถูกเขียนทับ)
 
 ## วิธีเพิ่มฟีเจอร์ในอนาคต
 - **ผลการ์ดพิเศษแบบใหม่**: เพิ่มชนิดใน `Effect` (`shared/types.ts`) → ตรวจใน `validateEffect` (`shared/content.ts`) → ทำงานใน `applyEffect` (`shared/engine.ts`) → เขียน unit test ใน `tests/unit/engine.test.ts`
 - **กติกาใหม่**: เพิ่มฟิลด์ใน `GameSettings` + `DEFAULT_SETTINGS` + `sanitizeSettings` → ใช้ใน engine → เพิ่มช่องใน `src/pages/SettingsForm.tsx`
-- **คำสั่งใหม่จากผู้เล่น**: เพิ่มฟังก์ชันใน engine → เพิ่ม callable ใน `functions/src/index.ts` (ใช้ `mutateRoom`) → เพิ่มใน `src/services/api.ts`
+- **คำสั่งใหม่จากผู้เล่น**: เพิ่มฟังก์ชันใน engine → เพิ่มใน `PLAYER_COMMANDS` / `applyPlayerCommand` (`shared/commands.ts`) → เพิ่มช่องข้อมูลที่อนุญาตใน `inbox` ของ `database.rules.json` → เพิ่มใน `src/services/api.ts`
+- **ต้องการให้เกมเดินได้โดยไม่ต้องเปิดเครื่องครู**: ย้าย Host Runtime ไปเป็น Cloud Functions (ต้องใช้แพ็กเกจ Blaze) — `shared/commands.ts` ใช้ซ้ำได้ทั้งหมด
 - **กระดานใหม่** (เช่น 50 ช่อง): วางไฟล์ภาพที่ `public/assets/board/` (ต้อง build ใหม่) → Board Editor → กำหนดจำนวนช่อง + ที่อยู่ภาพ → คลิก/ลากพิกัดทีละช่อง → บันทึก (ระบบไม่ยอมบันทึกจนกว่าพิกัดครบ)
 - หลังแก้ทุกครั้ง: `npm test && npm run lint && npm run build && npm run test:integration && npm run test:e2e`
 
 ## ข้อจำกัดที่ทราบ
 - กระดานต้นฉบับมี 36 ช่อง (Prompt ระบุ 50) — รอครูยืนยัน
-- การหมดเวลาตอบตรวจเมื่อมีเครื่องใดในห้องเปิดอยู่ (ทุกเครื่องเรียก `checkTimeout` อัตโนมัติ)
+- ครูต้องเปิดหน้าควบคุมห้องค้างไว้ระหว่างเล่น (เครื่องครูเป็นผู้ตัดสินเกมและตรวจหมดเวลา)
 - การกลับเข้าห้องจาก **เครื่องอื่น** ทำได้เมื่อใช้การเข้าสู่ระบบด้วยเลขประจำตัวเท่านั้น (เครื่องเดิมกลับเข้าได้เสมอ)
 - ยังไม่ได้ Deploy จริง

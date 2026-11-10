@@ -1,6 +1,6 @@
 /* =========================================================
    WAVE ADVENTURE ONLINE — shared data models
-   ใช้ร่วมกันระหว่าง Frontend (React) และ Backend (Cloud Functions)
+   ใช้ร่วมกันระหว่างหน้าเว็บ (React) และ Host Runtime บนเครื่องครู
    ========================================================= */
 
 export type CellType = 'START' | 'NORMAL' | 'WAVE' | 'LIGHTNING' | 'FINISH';

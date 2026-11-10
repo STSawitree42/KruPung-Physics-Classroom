@@ -1,12 +1,9 @@
 node_modules/
 dist/
-functions/lib/
-functions/node_modules/
 *.log
 .env
 .env.local
 .env.production
 !.env.example
-!functions/.env.demo-wave-adventure
 test-results/
 .firebase/

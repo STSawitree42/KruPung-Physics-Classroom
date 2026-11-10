@@ -68,5 +68,5 @@ window.addEventListener('message', e => {
 ## 🌊 WAVE ADVENTURE ONLINE: การผจญภัยในโลกคลื่น (โฟลเดอร์ `wave-adventure-online/`)
 
 บอร์ดเกมฟิสิกส์ออนไลน์หลายผู้เล่น เรื่องคลื่นกล ม.5 (ดัดแปลงจากบอร์ดเกมต้นฉบับ) ครูเปิดห้อง + QR นักเรียนเล่นเป็นกลุ่มผ่านมือถือ
-React + TypeScript + Firebase (เซิร์ฟเวอร์ตัดสินลูกเต๋า/คะแนน) · Teacher Dashboard · คลังคำถาม 50 ข้อ · ส่งออก CSV · PWA
+React + TypeScript + Firebase แพ็กเกจฟรี (ไม่ต้องผูกบัตร · เครื่องครูตัดสินลูกเต๋า/คะแนน) · Teacher Dashboard · คลังคำถาม 50 ข้อ · ส่งออก CSV · PWA
 เริ่มอ่านที่ [`wave-adventure-online/README.md`](wave-adventure-online/README.md) → ตั้งค่าตาม `FIREBASE_SETUP.md` และ `DEPLOYMENT_GUIDE.md`

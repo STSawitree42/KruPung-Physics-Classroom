@@ -2,20 +2,39 @@ import { useEffect, useRef, useState } from 'react';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { onValue, ref, onDisconnect, set, serverTimestamp, remove } from 'firebase/database';
 import { fb, isConfigured } from '../config/firebase';
+import { checkTeacher } from '../services/api';
+import { startHost } from '../host/hostRuntime';
 import type { RoomPublic } from '@shared/types';
 
-/** ผู้ใช้ปัจจุบัน + สิทธิ์ครู */
+/** ผู้ใช้ปัจจุบัน + สิทธิ์ครู (อีเมลอยู่ใน config/teacherEmails) + ข้อมูลนักเรียน (studentLinks) */
 export function useAuthUser() {
   const [state, setState] = useState<{ user: User | null; teacher: boolean; ready: boolean; sid?: string; sname?: string }>({ user: null, teacher: false, ready: !isConfigured });
   useEffect(() => {
     if (!isConfigured) return;
-    return onAuthStateChanged(fb().auth, async u => {
+    let offLink = () => {};
+    const offAuth = onAuthStateChanged(fb().auth, async u => {
+      offLink();
       if (!u) return setState({ user: null, teacher: false, ready: true });
-      const claims = (await u.getIdTokenResult()).claims;
-      setState({ user: u, teacher: claims.teacher === true, ready: true, sid: claims.sid as string | undefined, sname: claims.sname as string | undefined });
+      const teacher = await checkTeacher(u);
+      setState({ user: u, teacher, ready: true });
+      if (u.isAnonymous) offLink = onValue(ref(fb().db, `studentLinks/${u.uid}`), s => {
+        const v = s.val() as { sid?: string; name?: string } | null;
+        setState(st => (st.user?.uid === u.uid ? { ...st, sid: v?.sid, sname: v?.name } : st));
+      }, () => {});
     });
+    return () => { offAuth(); offLink(); };
   }, []);
   return state;
+}
+
+/** เครื่องครูทำหน้าที่ "เซิร์ฟเวอร์ของเกม" ระหว่างเปิดหน้าควบคุมห้อง */
+export function useHostRuntime(roomId: string | null, hostUid: string | null, onError?: (e: unknown) => void) {
+  const cb = useRef(onError); cb.current = onError;
+  useEffect(() => {
+    if (!roomId || !hostUid || !isConfigured) return;
+    const h = startHost(fb().db, roomId, hostUid, e => { console.error(e); cb.current?.(e); });
+    return () => h.stop();
+  }, [roomId, hostUid]);
 }
 
 /** สมัครรับสถานะห้องแบบ real-time */

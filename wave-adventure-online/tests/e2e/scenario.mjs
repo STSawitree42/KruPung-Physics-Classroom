@@ -188,6 +188,14 @@ try {
     await visitor.screenshot({ path: `${OUT}/${file}-mobile.png`, fullPage: true });
     check(`TEST 17: ${path} fits a 390px phone`, await noOverflow(visitor, 390));
   }
+  /* ---------- non-allow-listed Google account sees how to grant teacher access ---------- */
+  const stranger = await mk('stranger', { width: 390, height: 844 }, true);
+  await stranger.goto(`${BASE}/#/create`);
+  await stranger.locator('#emuEmail').fill('stranger@school.test');
+  await stranger.getByRole('button', { name: 'เข้าสู่ระบบ (ทดสอบ)' }).click();
+  await stranger.getByRole('alert').waitFor({ timeout: 15000 });
+  check('a non-teacher account cannot create rooms and is shown the allow-list key', (await stranger.getByRole('alert').textContent()).includes('stranger@school,test'));
+  check('TEST 17: teacher gate fits a 390px phone', await noOverflow(stranger, 390));
 } catch (e) {
   check('scenario completed without exceptions', false, e.message.split('\n')[0]);
 } finally {

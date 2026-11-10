@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Copy, LogOut, Play, Pause, SkipForward, Flag, Users, Check, Dice5, Gavel, RotateCcw, Download, Trophy, Minus, Plus, UserX } from 'lucide-react';
 import type { PublicCard, RoomPublic, WaveType } from '@shared/types';
 import { api, lastRoom } from '../services/api';
-import { useAuthUser, usePresence, usePresenceList, useRoom, useServerOffset } from '../hooks/useFirebase';
+import { useAuthUser, useHostRuntime, usePresence, usePresenceList, useRoom, useServerOffset } from '../hooks/useFirebase';
 import { Board, Countdown, Dice, FlipCard, LogFeed, RevealPanel, Scoreboard, WaveTypeChooser } from '../components/game';
 import { Latex, Loading, Modal, QR, avatarEmoji, go, useToast } from '../components/ui';
 import { sfx } from '../game/sound';
@@ -20,6 +20,9 @@ export default function RoomPage({ roomId, asHost }: { roomId: string; asHost?: 
   usePresence(room ? roomId : null, uid);
   const presence = usePresenceList(room ? roomId : null);
   const isHost = !!room && room.hostUid === uid;
+  // เครื่องครูเป็นผู้ตัดสินเกม (รับคำสั่งนักเรียน ทอยลูกเต๋า ตรวจคำตอบ ตรวจหมดเวลา) ตลอดที่เปิดหน้านี้
+  useHostRuntime(isHost ? roomId : null, isHost ? uid : null);
+  const hostOffline = !!room && !isHost && room.status !== 'FINISHED' && presence[room.hostUid]?.online !== true;
 
   useEffect(() => { if (room && !isHost) lastRoom.set({ roomId, code: room.code }); }, [room, isHost, roomId]);
   useEffect(() => { if (room && asHost && !isHost && uid) go(`/room/${roomId}`); }, [room, asHost, isHost, uid, roomId]);
@@ -35,6 +38,9 @@ export default function RoomPage({ roomId, asHost }: { roomId: string; asHost?: 
     );
   }
   if (!room) return <Loading />;
+  const banner = hostOffline && <div role="status" className="glass-soft p-3 mb-3 text-sm text-gold text-center">⏳ เครื่องครูยังไม่ได้เปิดหน้าควบคุมห้องนี้ — เกมจะทำงานต่อเมื่อครูเปิดหน้าห้องค้างไว้</div>;
+  if (banner && room.status !== 'WAITING') return <>{banner}<GameView room={room} uid={uid!} isHost={isHost} presence={presence} /></>;
+  if (banner) return <>{banner}<Lobby room={room} uid={uid!} isHost={isHost} presence={presence} /></>;
   if (room.status === 'WAITING') return <Lobby room={room} uid={uid!} isHost={isHost} presence={presence} />;
   if (room.status === 'FINISHED') return <ResultView room={room} uid={uid!} isHost={isHost} />;
   return <GameView room={room} uid={uid!} isHost={isHost} presence={presence} />;
@@ -153,18 +159,7 @@ function GameView({ room, uid, isHost, presence }: { room: RoomPublic; uid: stri
     if (mv.dice?.length) setLastDice(mv.dice[mv.dice.length - 1]);
     if (mv.kind === 'dice' || mv.dice?.length) { setRolling(true); sfx.dice(); const t = setTimeout(() => setRolling(false), 650); return () => clearTimeout(t); }
   }, [turn.move]);
-  // ---- deadline: any device asks the server to resolve a timeout (server verifies the time) ----
-  useEffect(() => {
-    if (!turn.deadline || paused) return;
-    const wait = turn.deadline - (Date.now() + offset) + 600 + Math.random() * 1500;
-    const t = setTimeout(() => { api.checkTimeout(room.id).catch(() => {}); }, Math.max(0, wait));
-    return () => clearTimeout(t);
-  }, [turn.deadline, offset, paused, room.id]);
-  useEffect(() => {
-    if (!room.endsAt || paused) return;
-    const t = setTimeout(() => { api.checkTimeout(room.id).catch(() => {}); }, Math.max(0, room.endsAt - (Date.now() + offset) + 800));
-    return () => clearTimeout(t);
-  }, [room.endsAt, offset, paused, room.id]);
+  // การหมดเวลาตอบ/หมดเวลาเกม ตรวจโดยเครื่องครู (Host Runtime) ตามเวลาเซิร์ฟเวอร์
 
   const run = async (fn: () => Promise<unknown>) => { if (busy) return; setBusy(true); try { await fn(); } catch (e) { toast((e as Error).message, 'bad'); } finally { setBusy(false); } };
   const doRoll = () => run(async () => { setRolling(true); sfx.dice(); try { await api.roll(room.id); } finally { setTimeout(() => setRolling(false), 400); } });

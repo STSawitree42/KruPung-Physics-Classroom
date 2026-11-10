@@ -1,22 +1,23 @@
 # TEST_REPORT — รายงานผลการทดสอบ
 
 ทดสอบวันที่ 10 พ.ย. 2569 บนเครื่องพัฒนา (Linux, Node.js 22, Chromium ผ่าน Playwright)
-Backend ทดสอบกับ **Firebase Emulator** (Auth + Realtime Database + Cloud Functions) โปรเจกต์ `demo-wave-adventure`
-> ยังไม่ได้ทดสอบบน Firebase จริง เพราะยังไม่ได้ Deploy (ต้องใช้บัญชีครู + แพ็กเกจ Blaze)
+ทดสอบกับ **Firebase Emulator** (Auth + Realtime Database + Security Rules) โปรเจกต์ `demo-wave-adventure`
+สถาปัตยกรรมแบบฟรี (Spark): เครื่องครูรัน Host Runtime เป็นผู้ตัดสินเกม · ไม่มี Cloud Functions
+> ยังไม่ได้ทดสอบบน Firebase จริง เพราะยังไม่ได้ตั้งค่าโปรเจกต์ด้วยบัญชีของครู
 
 ## สรุป
 | ชุดทดสอบ | คำสั่ง | ผล |
 |---|---|---|
-| Unit (Vitest + React Testing Library) | `npm test` | ✅ **52/52** (engine 35 · content 14 · components 3) |
-| Integration (Emulator, ผู้ใช้ 5 sessions: ครู 1 + นักเรียน 4) | `npm run test:integration` | ✅ **17/17** |
-| E2E (เปิดเว็บจริง 5 browser contexts: ครู 1 + นักเรียน 4) | `npm run test:e2e` | ✅ **23/23** (รันติดกัน 3 รอบก่อนส่ง + รอบยืนยันล่าสุด) |
+| Unit (Vitest + React Testing Library) | `npm test` | ✅ **59/59** (engine 35 · content 14 · commands 7 · components 3) |
+| Integration (Emulator, ครู 1 + นักเรียน 4 + บัญชีเพิ่มเติม) | `npm run test:integration` | ✅ **18/18** |
+| E2E (เปิดเว็บจริง: ครู 1 + นักเรียน 3 กลุ่ม (1 กลุ่มจอมือถือ) + ผู้เยี่ยมชม) | `npm run test:e2e` | ✅ **25/25** |
+| Apps Script (`SoundQuest.gs` คำสั่ง login / verify / waveLink) | ชุดจำลองบริการ Google | ✅ ผ่าน (PIN ผิด, ม.4, token ปลอม, ไม่ได้ตั้งค่า) |
 | TypeScript | `npm run typecheck` / `npm run build` | ✅ ไม่มี error |
 | ESLint | `npm run lint` | ✅ ไม่มี error/warning |
-| Production Build | `npm run build` | ✅ (JS หลัก 374 kB · gzip 116 kB) |
-| สแกน `dist/` หารหัสลับ / เฉลย | grep `AIza`, `private_key`, ข้อความเฉลยการ์ด | ✅ ไม่พบ (เฉลยอยู่ฝั่ง Backend เท่านั้น) |
-| `npm audit --omit=dev` (Frontend) | | ✅ 0 vulnerabilities |
-| `npm audit --omit=dev` (functions) | | ⚠ 6 moderate (glob/minimatch ใน dependency ของ firebase-admin, ไม่ถูกเรียกด้วยข้อมูลจากผู้ใช้) |
-| เครื่องมือพัฒนา (firebase-tools 14) | | ⚠ มี advisory ใน dependency ของเครื่องมือ ใช้เฉพาะตอนพัฒนา/Deploy ไม่อยู่ในเว็บที่นักเรียนใช้ |
+| Production Build | `npm run build` | ✅ (JS หลัก 412 kB · gzip 127 kB) |
+| สแกน `dist/` หารหัสลับ / เฉลย | grep `AIza`, `private_key`, `WAVE_DB_SECRET`, ข้อความการ์ด/คำถาม | ✅ ไม่พบ (เฉลยอยู่ในฐานข้อมูลส่วนที่ครูอ่านได้เท่านั้น) |
+| `npm audit --omit=dev` | | ✅ 0 vulnerabilities |
+| เครื่องมือพัฒนา (firebase-tools 14) | | ⚠ มี advisory ใน dependency ของเครื่องมือ ใช้เฉพาะตอนทดสอบในเครื่อง ไม่อยู่ในเว็บที่นักเรียนใช้ |
 
 ## Acceptance Tests 1–20
 | # | เกณฑ์ | ทดสอบโดย | ผล |
@@ -26,20 +27,20 @@ Backend ทดสอบกับ **Firebase Emulator** (Auth + Realtime Database
 | 3 | ทุกเครื่องเห็นรายชื่อผู้เล่นตรงกัน | Integration + E2E | ✅ |
 | 4 | Host เริ่มเกมได้ ผู้เล่นทั่วไปเริ่มไม่ได้ | Integration + E2E | ✅ |
 | 5 | เฉพาะผู้เล่นที่ถึงตาทอยลูกเต๋าได้ | Integration | ✅ |
-| 6 | ลูกเต๋าสุ่มที่ Backend (crypto RNG) ผลตรงกันทุกเครื่อง | Integration + E2E (คะแนน 4 เครื่องตรงกัน) | ✅ |
+| 6 | ลูกเต๋าสุ่มที่เครื่องครู/Host (crypto RNG) ไม่ใช่เครื่องนักเรียน ผลตรงกันทุกเครื่อง | Integration + E2E (คะแนน 4 เครื่องตรงกัน) | ✅ |
 | 7 | ตัวเดินเคลื่อนตามแต้มบนพิกัดกระดานจริง | Integration + Unit | ✅ |
 | 8 | ช่องคลื่นเปิดการ์ด/คำถามถูกต้อง (ไม่ส่งเฉลยมาก่อน) | Integration + E2E | ✅ |
-| 9 | Client แก้คะแนน/ตำแหน่ง/ลูกเต๋าเองไม่ได้ | Integration (Security Rules) | ✅ |
+| 9 | นักเรียนแก้คะแนน/ตำแหน่ง/ลูกเต๋าเอง หรือส่งคำสั่งในนามคนอื่นไม่ได้ | Integration (Security Rules) | ✅ |
 | 10 | ตอบถูกได้คะแนนตามกติกา | Integration + Unit | ✅ |
 | 11 | ส่งคำตอบซ้ำไม่ได้คะแนนซ้ำ (requestId + state machine) | Integration + Unit | ✅ |
 | 12 | ช่องฟ้าผ่าเปิดการ์ด ¹ | Integration + Unit | ✅ |
-| 13 | หลุดแล้วกลับเข้าห้องเดิมได้ตามสิทธิ์ | Integration (โหลดใหม่ + เข้าจากเครื่องใหม่ด้วยเลขประจำตัว) | ✅ |
+| 13 | หลุดแล้วกลับเข้าห้องเดิมได้ตามสิทธิ์ | Integration (โหลดใหม่ + เข้าจากเครื่องใหม่ด้วยเลขประจำตัว) · หมดเวลาตอบตัดสินโดย Host อัตโนมัติ | ✅ |
 | 14 | ถึงเส้นชัยแล้วจบเกมตามกติกา ² | Integration + Unit | ✅ |
 | 15 | หน้าสรุปผลแสดงผู้ชนะและคะแนนถูกต้อง | Integration + E2E | ✅ |
 | 16 | Teacher Dashboard แสดงผลการเล่น | Integration + E2E | ✅ |
 | 17 | ใช้บนมือถือได้ ไม่มีองค์ประกอบล้นจอ | E2E ที่ 360 / 375 / 390 / 430 / 768 px | ✅ |
 | 18 | Production Build ไม่มี TypeScript Error | `npm run build` | ✅ |
-| 19 | Security Rules ป้องกันการเข้าถึงโดยไม่ได้รับอนุญาต | Integration (อ่าน/เขียนโดยตรงถูกปฏิเสธ, รู้รหัสห้องอย่างเดียวเข้าไม่ได้) | ✅ |
+| 19 | Security Rules ป้องกันการเข้าถึงโดยไม่ได้รับอนุญาต | Integration (อ่าน/เขียนโดยตรงถูกปฏิเสธ, ปลอมสิทธิ์ครู/เลขประจำตัวไม่ได้, ครูคนอื่นแก้ห้องไม่ได้, รู้รหัสห้องอย่างเดียวเข้าไม่ได้) + E2E | ✅ |
 | 20 | ไม่มี Secret ใน Frontend | สแกน `dist/` | ✅ |
 
 ¹ Prompt ระบุว่าช่องฟ้าผ่าเปิด “การ์ดสถานการณ์” แต่กติกาต้นฉบับของครูให้ช่องฟ้าผ่าเปิด **การ์ดพิเศษ** ระบบทำตามต้นฉบับ (ดู ASSET_ANALYSIS.md)
@@ -47,6 +48,7 @@ Backend ทดสอบกับ **Firebase Emulator** (Auth + Realtime Database
 
 ## สิ่งที่ยังไม่ได้ทดสอบ
 - การเข้าสู่ระบบ Google แบบ popup จริง (ทดสอบด้วย token จำลองของ Auth Emulator)
+- Apps Script จริงเชื่อมกับ Firebase จริง (ทดสอบด้วยชุดจำลองบริการ Google + การเขียน studentLinks ใน Emulator)
 - Firebase จริงบนอินเทอร์เน็ต / ความหน่วงของเครือข่ายโรงเรียน
 - iOS Safari และ Android Chrome บนเครื่องจริง (ทดสอบด้วยขนาดจอจำลองใน Chromium)
 - เกมที่มีผู้เล่นพร้อมกันหลายห้องจำนวนมาก (load test)
@@ -54,7 +56,7 @@ Backend ทดสอบกับ **Firebase Emulator** (Auth + Realtime Database
 ## ทดสอบซ้ำด้วยตนเอง
 ```bash
 cd wave-adventure-online
-npm ci && npm --prefix functions ci
+npm ci
 npm test && npm run lint && npm run build
 npm run test:integration
 npm run test:e2e

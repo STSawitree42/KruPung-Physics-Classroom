@@ -2,91 +2,195 @@
   "rules": {
     ".read": false,
     ".write": false,
-
     "rooms": {
       "$rid": {
+        ".read": "auth != null && data.child('public').child('hostUid').val() === auth.uid",
+        ".write": "auth != null && auth.token.email_verified === true && root.child('config').child('teacherEmails').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true && ((!data.exists() && newData.child('public').child('hostUid').val() === auth.uid && newData.child('public').child('id').val() === $rid) || (data.child('public').child('hostUid').val() === auth.uid && (!newData.exists() || newData.child('public').child('hostUid').val() === auth.uid)))",
         "public": {
-          ".read": "auth != null && (root.child('rooms').child($rid).child('members').child(auth.uid).exists() || root.child('rooms').child($rid).child('public/hostUid').val() === auth.uid)"
+          ".read": "auth != null && (root.child('rooms').child($rid).child('members').child(auth.uid).exists() || root.child('rooms').child($rid).child('public').child('hostUid').val() === auth.uid)"
         },
         "members": {
-          "$uid": { ".read": "auth != null && auth.uid === $uid" }
+          "$uid": {
+            ".read": "auth != null && auth.uid === $uid"
+          }
         }
       }
     },
-
+    "roomCodes": {
+      "$code": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.token.email_verified === true && root.child('config').child('teacherEmails').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true && !data.exists() && $code.matches(/^[A-Z0-9]{6}$/)",
+        ".validate": "newData.isString() && newData.val().matches(/^R[a-z0-9]{6,40}$/)"
+      }
+    },
+    "inbox": {
+      "$rid": {
+        ".read": "auth != null && root.child('rooms').child($rid).child('public').child('hostUid').val() === auth.uid",
+        "$uid": {
+          "$req": {
+            ".write": "(auth != null && auth.uid === $uid && !data.exists() && newData.exists() && $req.matches(/^r[A-Za-z0-9]{8,40}$/) && root.child('rooms').child($rid).child('public').exists()) || (auth != null && root.child('rooms').child($rid).child('public').child('hostUid').val() === auth.uid && !newData.exists())",
+            ".validate": "newData.hasChildren(['t', 'at']) && newData.child('t').isString() && newData.child('t').val().matches(/^(join|leave|ready|roll|answer|choose)$/)",
+            "t": {
+              ".validate": true
+            },
+            "at": {
+              ".validate": "newData.val() === now"
+            },
+            "name": {
+              ".validate": "newData.isString() && newData.val().length <= 40"
+            },
+            "avatar": {
+              ".validate": "newData.isString() && newData.val().length <= 20"
+            },
+            "color": {
+              ".validate": "newData.isString() && newData.val().length <= 10"
+            },
+            "ready": {
+              ".validate": "newData.isBoolean()"
+            },
+            "option": {
+              ".validate": "newData.isNumber()"
+            },
+            "answer": {
+              ".validate": "newData.isNumber() || newData.hasChildren()",
+              "$i": {
+                ".validate": "$i.matches(/^[0-9]$/) && newData.isString() && newData.val().length <= 20"
+              }
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        }
+      }
+    },
+    "replies": {
+      "$rid": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          "$req": {
+            ".write": "auth != null && ((auth.uid === $uid && !newData.exists()) || root.child('rooms').child($rid).child('public').child('hostUid').val() === auth.uid)"
+          }
+        }
+      }
+    },
+    "studentLinks": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || (auth != null && auth.token.email_verified === true && root.child('config').child('teacherEmails').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true))"
+      }
+    },
     "presence": {
       "$rid": {
         ".read": "auth != null && (root.child('rooms').child($rid).child('members').child(auth.uid).exists() || root.child('rooms').child($rid).child('public/hostUid').val() === auth.uid)",
         "$uid": {
           ".write": "auth != null && auth.uid === $uid && (root.child('rooms').child($rid).child('members').child(auth.uid).exists() || root.child('rooms').child($rid).child('public/hostUid').val() === auth.uid)",
           ".validate": "!newData.exists() || (newData.hasChildren(['online', 't']) && newData.child('online').isBoolean() && newData.child('t').isNumber())",
-          "online": { ".validate": true },
-          "t": { ".validate": true },
-          "$other": { ".validate": false }
+          "online": {
+            ".validate": true
+          },
+          "t": {
+            ".validate": true
+          },
+          "$other": {
+            ".validate": false
+          }
         }
       }
     },
-
     "roomAnswers": {
-      "$rid": { ".read": "auth != null && root.child('rooms').child($rid).child('public/hostUid').val() === auth.uid" }
+      "$rid": {
+        ".read": "auth != null && root.child('rooms').child($rid).child('public').child('hostUid').val() === auth.uid",
+        ".write": "auth != null && root.child('rooms').child($rid).child('public').child('hostUid').val() === auth.uid"
+      }
     },
     "results": {
-      "$rid": { ".read": "auth != null && root.child('results').child($rid).child('hostUid').val() === auth.uid" }
+      "$rid": {
+        ".read": "auth != null && data.child('hostUid').val() === auth.uid",
+        ".write": "auth != null && root.child('rooms').child($rid).child('public').child('hostUid').val() === auth.uid && newData.child('hostUid').val() === auth.uid"
+      }
     },
     "teacherRooms": {
-      "$uid": { ".read": "auth != null && auth.uid === $uid" }
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid && auth != null && auth.token.email_verified === true && root.child('config').child('teacherEmails').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true"
+      }
     },
-    "teachers": {
-      "$uid": { ".read": "auth != null && auth.uid === $uid" }
-    },
-
     "config": {
+      "teacherEmails": {
+        "$key": {
+          ".read": "auth != null && auth.token.email_verified === true && $key === auth.token.email.toLowerCase().replace('.', ',')"
+        }
+      },
       "board": {
         ".read": "auth != null",
-        ".write": "auth != null && auth.token.teacher === true",
+        ".write": "auth != null && auth.token.email_verified === true && root.child('config').child('teacherEmails').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true",
         ".validate": "newData.hasChildren(['id', 'name', 'image', 'aspect', 'cells']) && newData.child('image').isString() && newData.child('image').val().length < 300 && newData.child('aspect').isNumber() && newData.child('aspect').val() > 0.2 && newData.child('aspect').val() < 5",
-        "id": { ".validate": "newData.isString() && newData.val().length <= 60" },
-        "name": { ".validate": "newData.isString() && newData.val().length <= 80" },
-        "image": { ".validate": true },
-        "aspect": { ".validate": true },
-        "updatedAt": { ".validate": "newData.isNumber()" },
+        "id": {
+          ".validate": "newData.isString() && newData.val().length <= 60"
+        },
+        "name": {
+          ".validate": "newData.isString() && newData.val().length <= 80"
+        },
+        "image": {
+          ".validate": true
+        },
+        "aspect": {
+          ".validate": true
+        },
+        "updatedAt": {
+          ".validate": "newData.isNumber()"
+        },
         "cells": {
           "$i": {
             ".validate": "$i.matches(/^[0-9]{1,3}$/) && newData.hasChildren(['index', 'type']) && newData.child('index').isNumber() && newData.child('type').val().matches(/^(START|NORMAL|WAVE|LIGHTNING|FINISH)$/)",
-            "index": { ".validate": true },
-            "type": { ".validate": true },
-            "x": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1" },
-            "y": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1" },
-            "color": { ".validate": "newData.isString() && newData.val().matches(/^(blue|purple)$/)" },
-            "$other": { ".validate": false }
+            "index": {
+              ".validate": true
+            },
+            "type": {
+              ".validate": true
+            },
+            "x": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1"
+            },
+            "y": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1"
+            },
+            "color": {
+              ".validate": "newData.isString() && newData.val().matches(/^(blue|purple)$/)"
+            },
+            "$other": {
+              ".validate": false
+            }
           }
         },
-        "$other": { ".validate": false }
+        "$other": {
+          ".validate": false
+        }
       }
     },
-
     "content": {
-      ".read": "auth != null && auth.token.teacher === true",
+      ".read": "auth != null && auth.token.email_verified === true && root.child('config').child('teacherEmails').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true",
       "question": {
         "$id": {
-          ".write": "auth != null && auth.token.teacher === true",
+          ".write": "auth != null && auth.token.email_verified === true && root.child('config').child('teacherEmails').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true",
           ".validate": "$id.matches(/^[A-Za-z0-9_-]{1,40}$/) && newData.hasChildren(['id', 'text', 'choices', 'answer', 'points']) && newData.child('id').val() === $id && newData.child('text').isString() && newData.child('text').val().length <= 1000 && newData.child('answer').isNumber() && newData.child('answer').val() >= 0 && newData.child('answer').val() <= 3 && newData.child('points').isNumber() && newData.child('points').val() >= 0 && newData.child('points').val() <= 100"
         }
       },
       "situation": {
         "$id": {
-          ".write": "auth != null && auth.token.teacher === true",
+          ".write": "auth != null && auth.token.email_verified === true && root.child('config').child('teacherEmails').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true",
           ".validate": "$id.matches(/^[A-Za-z0-9_-]{1,40}$/) && newData.hasChildren(['id', 'title', 'text', 'answers', 'points']) && newData.child('id').val() === $id && newData.child('text').isString() && newData.child('text').val().length <= 600 && newData.child('points').isNumber() && newData.child('points').val() >= 0 && newData.child('points').val() <= 100"
         }
       },
       "special": {
         "$id": {
-          ".write": "auth != null && auth.token.teacher === true",
+          ".write": "auth != null && auth.token.email_verified === true && root.child('config').child('teacherEmails').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true",
           ".validate": "$id.matches(/^[A-Za-z0-9_-]{1,40}$/) && newData.hasChildren(['id', 'title', 'text', 'type', 'effect']) && newData.child('id').val() === $id && newData.child('type').val().matches(/^(REWARD|PENALTY|SITUATION|GOOD_DEED)$/) && newData.child('text').isString() && newData.child('text').val().length <= 600"
         }
       },
       "defaults": {
-        ".write": "auth != null && auth.token.teacher === true"
+        ".write": "auth != null && auth.token.email_verified === true && root.child('config').child('teacherEmails').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true",
+        ".read": "auth != null && auth.token.email_verified === true && root.child('config').child('teacherEmails').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true"
       }
     }
   }

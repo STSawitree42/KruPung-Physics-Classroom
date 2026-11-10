@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { Users, PlusCircle, BookOpen, Lightbulb, Settings as Cog, LogIn, GraduationCap, Volume2, VolumeX, Sparkles } from 'lucide-react';
-import { api, ensureUser, lastRoom, schoolLogin, teacherSignIn, teacherSignInEmulator } from '../services/api';
+import { api, emailKey, ensureUser, lastRoom, schoolLogin, teacherSignIn, teacherSignInEmulator } from '../services/api';
 import { useAuthUser } from '../hooks/useFirebase';
 import { AvatarPicker, ColorPicker, Pawn, go, useToast } from '../components/ui';
 import { DEFAULT_SETTINGS, TOKEN_COLORS } from '@shared/rules.config';
@@ -99,17 +99,28 @@ export function CreateRoom() {
 export function TeacherGate() {
   const toast = useToast();
   const [busy, setBusy] = useState(false);
+  const [denied, setDenied] = useState<string | null>(null);
+  const after = (r: { teacher: boolean; email: string }) => { if (r.teacher) { toast('ยืนยันสิทธิ์ครูแล้ว', 'good'); location.reload(); } else setDenied(r.email); };
+  const run = async (fn: () => Promise<{ teacher: boolean; email: string }>) => { setBusy(true); try { after(await fn()); } catch (e) { toast((e as Error).message, 'bad'); } finally { setBusy(false); } };
   return (
     <div className="max-w-md mx-auto glass p-6 text-center page-enter">
       <GraduationCap className="mx-auto text-neon" size={44} />
       <h1 className="text-xl font-semibold mt-2">สำหรับครูเท่านั้น</h1>
-      <p className="text-soft mt-1 text-sm">เข้าสู่ระบบด้วยบัญชี Google ของครูที่ได้รับสิทธิ์ (อีเมลอยู่ในรายการ TEACHER_EMAILS)</p>
-      <button className="btn btn-lg mt-4" disabled={busy} onClick={async () => { setBusy(true); try { await teacherSignIn(); toast('ยืนยันสิทธิ์ครูแล้ว', 'good'); location.reload(); } catch (e) { toast((e as Error).message, 'bad'); } finally { setBusy(false); } }}>เข้าสู่ระบบด้วย Google</button>
+      <p className="text-soft mt-1 text-sm">เข้าสู่ระบบด้วยบัญชี Google ของครูที่ได้รับสิทธิ์</p>
+      <button className="btn btn-lg mt-4" disabled={busy} onClick={() => run(teacherSignIn)}>เข้าสู่ระบบด้วย Google</button>
+      {denied != null && (
+        <div className="glass-soft p-3 mt-4 text-left text-sm" role="alert">
+          <p className="text-gold font-semibold">อีเมล {denied || '(ไม่มีอีเมล)'} ยังไม่ได้รับสิทธิ์ครู</p>
+          <p className="mt-1">ผู้ดูแลเพิ่มสิทธิ์ได้ที่ Firebase Console → Realtime Database → Data → <code>config</code> → <code>teacherEmails</code> → เพิ่ม key</p>
+          <code className="block mt-1 p-2 rounded bg-black/30 break-all select-all">{emailKey(denied)}</code>
+          <p className="mt-1">ค่า (value) = <code>true</code> แล้วกดเข้าสู่ระบบอีกครั้ง (ดู FIREBASE_SETUP.md)</p>
+        </div>
+      )}
       {USE_EMULATORS && (
         <div className="glass-soft p-3 mt-4 text-left">
           <p className="text-xs text-gold mb-2">โหมดทดสอบ (Firebase Emulator) — ไม่แสดงในเว็บจริง</p>
           <div className="flex gap-2"><input id="emuEmail" className="field" defaultValue="teacher@school.test" aria-label="อีเมลครูทดสอบ" />
-            <button className="btn btn-sm" disabled={busy} onClick={async () => { setBusy(true); try { await teacherSignInEmulator((document.getElementById('emuEmail') as HTMLInputElement).value); location.reload(); } catch (e) { toast((e as Error).message, 'bad'); } finally { setBusy(false); } }}>เข้าสู่ระบบ (ทดสอบ)</button></div>
+            <button className="btn btn-sm" disabled={busy} onClick={() => run(() => teacherSignInEmulator((document.getElementById('emuEmail') as HTMLInputElement).value))}>เข้าสู่ระบบ (ทดสอบ)</button></div>
         </div>
       )}
     </div>

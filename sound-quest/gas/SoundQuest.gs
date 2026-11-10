@@ -61,6 +61,7 @@ function sqHandle_(req) {
   switch (req.action) {
     case 'login': return sqLogin_(req.studentId, req.pin);
     case 'verify': return sqVerify_(req.studentId, req.pin);   // ใช้กับเกม WAVE ADVENTURE ONLINE (ตรวจตัวตนอย่างเดียว)
+    case 'waveLink': return sqWaveLink_(req.studentId, req.pin, req.idToken);   // WAVE ADVENTURE ONLINE แบบฟรี (Spark)
     case 'sync': return sqSync_(req.token, req.profile, req.events);
     case 'logout': CacheService.getScriptCache().remove('SQ_' + str_(req.token)); return { ok: true };
     case 'ping': return { ok: true, app: 'soundquest' };
@@ -107,6 +108,34 @@ function sqVerify_(studentId, pin) {
   var r = sqLogin_(studentId, pin);
   CacheService.getScriptCache().remove('SQ_' + r.token);
   return { ok: true, student: r.student };
+}
+
+/* ===== WAVE ADVENTURE ONLINE (Firebase แพ็กเกจฟรี Spark — ไม่ใช้ Cloud Functions) =====
+   ตั้งค่าที่ ⚙ การตั้งค่าโปรเจกต์ → คุณสมบัติของสคริปต์ (Script properties):
+     WAVE_DB_URL     URL ของ Realtime Database เช่น https://xxx-default-rtdb.asia-southeast1.firebasedatabase.app
+     WAVE_DB_SECRET  Database secret (Firebase → Project settings → Service accounts → Database secrets)
+     WAVE_API_KEY    Web API key ของโปรเจกต์ Firebase (ค่า apiKey)
+   ค่าเหล่านี้อยู่ฝั่ง Apps Script เท่านั้น นักเรียนมองไม่เห็น */
+function sqWaveLink_(studentId, pin, idToken) {
+  var p = PropertiesService.getScriptProperties();
+  var dbUrl = str_(p.getProperty('WAVE_DB_URL')).replace(/\/+$/, '');
+  var secret = str_(p.getProperty('WAVE_DB_SECRET')), apiKey = str_(p.getProperty('WAVE_API_KEY'));
+  if (!dbUrl || !secret || !apiKey) throw new Error('ครูยังไม่ได้ตั้งค่าการเชื่อมต่อเกม WAVE ADVENTURE (WAVE_DB_URL, WAVE_DB_SECRET, WAVE_API_KEY)');
+  var r = sqLogin_(studentId, pin);                 // ตรวจ PIN, ระดับชั้น และการล็อกเมื่อใส่ผิดซ้ำ
+  CacheService.getScriptCache().remove('SQ_' + r.token);
+  // ตรวจว่า idToken เป็นบัญชีเกมจริงของผู้ส่ง → ได้ uid (ป้องกันการผูกเลขประจำตัวกับบัญชีของคนอื่น)
+  var res = UrlFetchApp.fetch('https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=' + encodeURIComponent(apiKey), {
+    method: 'post', contentType: 'application/json', payload: JSON.stringify({ idToken: str_(idToken) }), muteHttpExceptions: true
+  });
+  var users = (res.getResponseCode() === 200 && JSON.parse(res.getContentText() || '{}').users) || [];
+  var uid = users[0] && users[0].localId;
+  if (!uid || !/^[A-Za-z0-9]{10,128}$/.test(uid)) throw new Error('ยืนยันบัญชีเกมไม่สำเร็จ กรุณาโหลดหน้าใหม่แล้วลองอีกครั้ง');
+  var link = { sid: str_(r.student.studentId), name: str_(r.student.name), classroom: str_(r.student.classroom), at: Date.now() };
+  var w = UrlFetchApp.fetch(dbUrl + '/studentLinks/' + uid + '.json?auth=' + encodeURIComponent(secret), {
+    method: 'put', contentType: 'application/json', payload: JSON.stringify(link), muteHttpExceptions: true
+  });
+  if (w.getResponseCode() !== 200) throw new Error('บันทึกข้อมูลเข้าเกมไม่สำเร็จ (ตรวจค่า WAVE_DB_URL / WAVE_DB_SECRET)');
+  return { ok: true, student: { studentId: link.sid, name: link.name, classroom: link.classroom } };
 }
 
 function sqAuth_(token) {

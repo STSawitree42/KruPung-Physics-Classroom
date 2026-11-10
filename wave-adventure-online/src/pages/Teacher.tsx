@@ -118,12 +118,11 @@ function ContentTab({ kind }: { kind: 'questions' | 'situation' | 'special' }) {
   const shown = items.filter(i => !filter || JSON.stringify(i).includes(filter)).sort((a, b) => a.id.localeCompare(b.id));
   const save = async (raw: Record<string, unknown>) => {
     try {
-      if (!state.seeded) await C.seedDefaults();
       if (key === 'question') await C.saveQuestion(raw); else if (key === 'situation') await C.saveSituation(raw); else await C.saveSpecial(raw);
       toast('บันทึกแล้ว', 'good'); setEdit(null); reload();
     } catch (e) { toast((e as Error).message, 'bad'); }
   };
-  const del = async (id: string) => { if (!confirm(`ลบ ${id}?`)) return; try { if (!state.seeded) await C.seedDefaults(); await C.deleteCard(key, id); toast('ลบแล้ว', 'good'); reload(); } catch (e) { toast((e as Error).message, 'bad'); } };
+  const del = async (id: string) => { if (!confirm(`ลบ ${id}?`)) return; try { await C.deleteCard(key, id); toast('ลบแล้ว', 'good'); reload(); } catch (e) { toast((e as Error).message, 'bad'); } };
   const newItem = (): Record<string, unknown> => {
     const id = (key === 'question' ? 'q' : key === 'situation' ? 's' : 'sp-') + Date.now().toString(36);
     if (key === 'question') return { id, kind: 'question', category: QUESTION_CATEGORIES[0], difficulty: 'medium', text: '', choices: ['', '', '', ''], answer: 0, explanation: '', points: 3, enabled: true };
@@ -132,12 +131,11 @@ function ContentTab({ kind }: { kind: 'questions' | 'situation' | 'special' }) {
   };
   return (
     <div className="glass p-4">
-      {!state.seeded && <div className="glass-soft p-3 mb-3 text-sm flex flex-wrap gap-2 items-center"><Database size={16} />ตอนนี้ใช้ชุดข้อมูลเริ่มต้นในระบบ (การ์ดต้นฉบับ + คำถาม 50 ข้อ) แก้ไขครั้งแรกระบบจะบันทึกชุดนี้ลงฐานข้อมูลให้อัตโนมัติ
-        <button className="btn btn-ghost btn-sm" onClick={() => C.seedDefaults().then(reload).then(() => toast('บันทึกชุดเริ่มต้นแล้ว', 'good')).catch(e => toast(e.message, 'bad'))}>บันทึกชุดเริ่มต้นตอนนี้</button></div>}
+      <ImportBundle seeded={state.seeded} onDone={reload} />
       <div className="flex flex-wrap gap-2 items-center mb-3">
         <input className="field !w-auto flex-1 min-w-[180px]" placeholder="ค้นหา..." value={filter} onChange={e => setFilter(e.target.value)} aria-label="ค้นหา" />
         <button className="btn btn-sm" onClick={() => setEdit(newItem())}><Plus size={14} />เพิ่ม</button>
-        {key === 'question' && <ImportQuestions onDone={reload} seeded={state.seeded} />}
+        {key === 'question' && <ImportQuestions onDone={reload} />}
         <button className="btn btn-ghost btn-sm" onClick={() => { const blob = new Blob([JSON.stringify(items, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${key}.json`; a.click(); }}><Download size={14} />ส่งออก JSON</button>
       </div>
       <p className="text-soft text-sm mb-2">ทั้งหมด {items.length} รายการ · เปิดใช้ {items.filter(i => i.enabled).length} · การแก้ไขมีผลกับห้องที่สร้างใหม่</p>
@@ -168,7 +166,27 @@ function ContentTab({ kind }: { kind: 'questions' | 'situation' | 'special' }) {
   );
 }
 
-function ImportQuestions({ onDone, seeded }: { onDone: () => void; seeded: boolean }) {
+/** นำเข้าชุดเริ่มต้นจากไฟล์ setup/wave-content.json (เฉลยไม่ได้ฝังอยู่ในแอปเพื่อไม่ให้นักเรียนเปิดดูได้) */
+function ImportBundle({ seeded, onDone }: { seeded: boolean; onDone: () => void }) {
+  const toast = useToast();
+  const onFile = async (f: File) => {
+    try {
+      const r = await C.importContentBundle(JSON.parse(await f.text()));
+      toast(`นำเข้า ${r.added} รายการ${r.errors.length ? ` · ผิดพลาด ${r.errors.length}: ${r.errors.slice(0, 2).join('; ')}` : ''}`, r.errors.length ? 'bad' : 'good');
+      onDone();
+    } catch (e) { toast('อ่านไฟล์ไม่ได้: ' + (e as Error).message, 'bad'); }
+  };
+  return (
+    <div className={`glass-soft p-3 mb-3 text-sm flex flex-wrap gap-2 items-center ${seeded ? '' : 'ring-2 ring-gold'}`}>
+      <Database size={16} />
+      {seeded ? 'นำเข้าการ์ด/คำถามที่ยังไม่มีจากไฟล์ชุดเริ่มต้น (รายการเดิมไม่ถูกเขียนทับ)'
+        : <span><b>ยังไม่มีคลังการ์ดในฐานข้อมูล</b> — ดาวน์โหลดไฟล์ <code>wave-adventure-online/setup/wave-content.json</code> จาก GitHub แล้วกดนำเข้า (การ์ดสถานการณ์ 20 ใบ + การ์ดพิเศษ 12 ใบ + คำถาม 50 ข้อ พร้อมเฉลย)</span>}
+      <label className="btn btn-sm cursor-pointer"><Upload size={14} />นำเข้าชุดเริ่มต้น<input type="file" accept=".json,application/json" className="hidden" aria-label="ไฟล์ชุดเริ่มต้น" onChange={e => e.target.files?.[0] && onFile(e.target.files[0])} /></label>
+    </div>
+  );
+}
+
+function ImportQuestions({ onDone }: { onDone: () => void }) {
   const toast = useToast();
   const onFile = async (f: File) => {
     const text = await f.text();
@@ -180,7 +198,6 @@ function ImportQuestions({ onDone, seeded }: { onDone: () => void; seeded: boole
         const col = (r: string[], k: string) => r[head.indexOf(k)] ?? '';
         list = rows.map(r => ({ id: col(r, 'id'), category: col(r, 'category'), difficulty: col(r, 'difficulty') || 'medium', text: col(r, 'text'), choices: [col(r, 'choice_a'), col(r, 'choice_b'), col(r, 'choice_c'), col(r, 'choice_d')], answer: 'abcd'.indexOf(col(r, 'answer').trim().toLowerCase()) >= 0 ? 'abcd'.indexOf(col(r, 'answer').trim().toLowerCase()) : Number(col(r, 'answer')), explanation: col(r, 'explanation'), points: Number(col(r, 'points') || 3), image: col(r, 'image') || undefined, enabled: true }));
       }
-      if (!seeded) await C.seedDefaults();
       const r = await C.importQuestions(list);
       toast(`นำเข้า ${r.saved} ข้อ${r.errors.length ? ` · ผิดพลาด ${r.errors.length} ข้อ: ${r.errors.slice(0, 2).join('; ')}` : ''}`, r.errors.length ? 'bad' : 'good');
       onDone();

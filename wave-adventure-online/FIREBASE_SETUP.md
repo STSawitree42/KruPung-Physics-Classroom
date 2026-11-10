@@ -1,64 +1,48 @@
-# FIREBASE_SETUP — ตั้งค่า Firebase (Backend)
+# FIREBASE_SETUP — ตั้งค่า Firebase แบบฟรี 100% (ไม่ต้องผูกบัตร)
 
-> ⚠ **เรื่องค่าใช้จ่าย:** Cloud Functions ต้องใช้แพ็กเกจ **Blaze (จ่ายตามการใช้งาน)** ซึ่งต้องผูกบัตรเครดิต/บัญชีเรียกเก็บเงิน
-> แพ็กเกจนี้มีโควตาฟรีรายเดือน (เช่น เรียกฟังก์ชัน 2 ล้านครั้ง/เดือน) การใช้งานในห้องเรียนทั่วไปน่าจะอยู่ในโควตาฟรี
-> แต่ **ครูต้องเป็นผู้ตัดสินใจเปิดเอง** ระบบนี้ยังไม่ได้เปิดบริการใดที่มีค่าใช้จ่าย แนะนำให้ตั้ง **Budget alert** ไว้ที่ 50–100 บาท
+> ✅ ใช้ **Firebase แพ็กเกจ Spark (ฟรี)** ซึ่ง **ไม่ต้องผูกบัตรเครดิตหรือบัญชีเรียกเก็บเงิน** และไม่มีทางถูกเรียกเก็บเงิน
+> (ถ้าใช้เกินโควตา Firebase จะหยุดให้บริการชั่วคราว ไม่ใช่เรียกเก็บเงิน)
+> ทุกขั้นตอนทำผ่านหน้าเว็บ **ไม่ต้องติดตั้งโปรแกรมใด ๆ** ใช้เวลาประมาณ 20–30 นาที
 
-ทำตามลำดับ ใช้เวลาประมาณ 30–45 นาที
+## ระบบทำงานอย่างไรเมื่อไม่มี Cloud Functions
+- **เครื่องครู = เซิร์ฟเวอร์ของเกม**: หน้าควบคุมห้อง (`/host/...`) ที่ครูเปิดบนโปรเจกเตอร์เป็นผู้ทอยลูกเต๋า ตรวจคำตอบ ให้คะแนน และตรวจหมดเวลา
+- **นักเรียนส่งได้แค่ “คำสั่ง”** (ทอย / ตอบ / เลือก) ของตัวเอง Security Rules ห้ามนักเรียนเขียนคะแนน ตำแหน่ง ลูกเต๋า หรืออ่านเฉลย
+- **เข้าสู่ระบบด้วยเลขประจำตัว + PIN** ตรวจโดย Apps Script ของครู (ไม่บังคับ)
+- ⚠ **ครูต้องเปิดหน้าควบคุมห้องค้างไว้ตลอดการเล่น** ถ้าปิด/หลุด เกมจะหยุดรอ และเล่นต่อได้ทันทีเมื่อเปิดหน้าเดิมอีกครั้ง (คะแนนไม่หาย)
+
+โควตาฟรีของ Spark (Realtime Database): ผู้ใช้พร้อมกัน 100 การเชื่อมต่อ · พื้นที่ 1 GB · ดาวน์โหลด 10 GB/เดือน — เพียงพอสำหรับหลายห้องเรียนพร้อมกัน (1 ห้อง ≈ ครู 1 + กลุ่ม 2–6 เครื่อง)
 
 ## 1. สร้าง Firebase Project
-1. เข้า https://console.firebase.google.com → **Add project** (สร้างโปรเจกต์)
-2. ตั้งชื่อ เช่น `wave-adventure-yingyuad` (จะได้ Project ID เช่น `wave-adventure-yingyuad`)
-3. Google Analytics: ปิดได้
+1. เข้า https://console.firebase.google.com → **Create a project**
+2. ตั้งชื่อ เช่น `wave-adventure-yingyuad` · Google Analytics: ปิดได้
+3. ตรวจมุมซ้ายล่างว่าแพ็กเกจเป็น **Spark (No-cost)** — **ไม่ต้องกด Upgrade**
 
 ## 2. เปิด Authentication
 1. **Build → Authentication → Get started**
-2. แท็บ **Sign-in method** เปิด 2 วิธี:
+2. แท็บ **Sign-in method** เปิด 2 วิธี
    - **Anonymous** (นักเรียนเข้าเล่นโดยไม่ต้องสมัคร)
    - **Google** (ครูเข้าสู่ระบบ) → ใส่อีเมลติดต่อ → Save
-3. แท็บ **Settings → Authorized domains** → **Add domain** ใส่โดเมน Netlify เช่น `wave-adventure.netlify.app`
+3. แท็บ **Settings → Authorized domains → Add domain** ใส่โดเมน Netlify เช่น `wave-adventure.netlify.app`
 
-## 3. เปิด Realtime Database
-1. **Build → Realtime Database → Create Database**
-2. เลือกตำแหน่ง **Singapore (asia-southeast1)** (ใกล้ไทยที่สุด)
-3. เลือก **Start in locked mode** (กฎจริงจะถูก deploy ในขั้นที่ 6)
-4. คัดลอก URL ฐานข้อมูล เช่น `https://wave-adventure-yingyuad-default-rtdb.asia-southeast1.firebasedatabase.app`
+## 3. สร้าง Realtime Database + ใส่ Security Rules
+1. **Build → Realtime Database → Create Database** → ตำแหน่ง **Singapore (asia-southeast1)** → **Start in locked mode**
+2. คัดลอก URL ฐานข้อมูล เช่น `https://wave-adventure-yingyuad-default-rtdb.asia-southeast1.firebasedatabase.app`
+3. แท็บ **Rules** → ลบของเดิมทั้งหมด → วางเนื้อหาไฟล์ [`database.rules.json`](database.rules.json) ทั้งไฟล์ → **Publish**
 
-## 4. อัปเกรดเป็น Blaze (จำเป็นสำหรับ Cloud Functions)
-1. มุมซ้ายล่าง **Upgrade → Blaze** → ผูกบัญชีเรียกเก็บเงิน
-2. ตั้ง **Budget alert** (Google Cloud Console → Billing → Budgets & alerts)
-
-## 5. ตั้งค่า Cloud Functions (Environment)
-สร้างไฟล์ `functions/.env.<Project ID>` เช่น `functions/.env.wave-adventure-yingyuad`
+## 4. ให้สิทธิ์ครู
+แท็บ **Data** → กด **+** ที่ราก แล้วสร้างโครงสร้าง
 ```
-TEACHER_EMAILS=sawitree@yingyuad.ac.th
-SCHOOL_API_URL=https://script.google.com/macros/s/XXXX/exec
+config
+ └─ teacherEmails
+     └─ sawitree@yingyuad,ac,th : true
 ```
-- `TEACHER_EMAILS` อีเมล Google ของครูที่มีสิทธิ์สร้างห้องและแก้คลังคำถาม (หลายคนคั่นด้วยจุลภาค)
-- `SCHOOL_API_URL` URL เว็บแอป Apps Script ของระบบห้องเรียนออนไลน์ (ตัวเดียวกับ SOUND QUEST) เว้นว่างได้ถ้าไม่ใช้การเข้าสู่ระบบด้วยเลขประจำตัว
-- ค่าเหล่านี้ไม่ใช่รหัสลับ แต่ไม่ควร commit อีเมลจริงลง GitHub สาธารณะ (ไฟล์ `.env.<project>` อยู่ใน .gitignore ยกเว้นไฟล์ทดสอบ demo)
+- key คืออีเมล Google ของครู **โดยเปลี่ยนจุด `.` เป็นจุลภาค `,`** (ฐานข้อมูลห้ามใช้จุดในชื่อ) ตัวพิมพ์เล็กทั้งหมด
+- ค่า (value) เป็น `true` (ชนิด boolean) · เพิ่มครูหลายคนได้
+- ถ้าลืมวิธีเขียน key: เข้าเว็บ → ครู → เข้าสู่ระบบ Google หน้าเว็บจะแสดง key ที่ต้องใส่ให้คัดลอก
+- นักเรียนเพิ่มสิทธิ์ตัวเองไม่ได้ (Rules ห้ามเขียน `config/teacherEmails`)
 
-### ใช้การเข้าสู่ระบบด้วยเลขประจำตัว + PIN (ไม่บังคับ)
-1. อัปเดตไฟล์ `SoundQuest.gs` ใน Apps Script ให้เป็นเวอร์ชันล่าสุดจาก `sound-quest/gas/SoundQuest.gs` (มีคำสั่ง `verify`)
-2. **การทำให้ใช้งานได้ → จัดการ → แก้ไข → เวอร์ชันใหม่** (URL เดิม)
-3. ใส่ URL ใน `SCHOOL_API_URL` · นักเรียนใช้ PIN ชุดเดิมของ SOUND QUEST และจำกัดเฉพาะ ม.5 เหมือนเดิม
-4. ถ้าต้องการบังคับทุกห้อง ให้เปิด “ต้องเข้าสู่ระบบด้วยเลขประจำตัว + PIN” ใน Game Settings
-
-## 6. Deploy Backend (ทำจากคอมพิวเตอร์ที่ติดตั้ง Node.js 22)
-```bash
-cd wave-adventure-online
-npm ci
-npm --prefix functions ci
-npx firebase login
-npx firebase use --add          # เลือก Project ที่สร้าง แล้วตั้งชื่อ alias เช่น prod
-npx firebase deploy --only database,functions
-```
-คำสั่งนี้ deploy
-- `database.rules.json` (Security Rules)
-- Cloud Functions 16 ตัวในภูมิภาค `asia-southeast1`
-
-## 7. ค่าสำหรับ Frontend (นำไปใส่ใน Netlify)
-**Project settings (⚙) → General → Your apps → Add app → Web (</>)** → ตั้งชื่อ → คัดลอกค่า `firebaseConfig`
+## 5. ค่าสำหรับ Frontend (นำไปใส่ใน Netlify)
+**Project settings (⚙) → General → Your apps → Web (</>)** → ตั้งชื่อ → **Register app** → คัดลอกค่าใน `firebaseConfig` (ไม่ต้องเลือก Firebase Hosting)
 
 | Netlify Environment Variable | ค่าจาก firebaseConfig |
 |---|---|
@@ -67,23 +51,43 @@ npx firebase deploy --only database,functions
 | `VITE_FIREBASE_PROJECT_ID` | projectId |
 | `VITE_FIREBASE_DATABASE_URL` | databaseURL (URL จากขั้นที่ 3) |
 | `VITE_FIREBASE_APP_ID` | appId |
-| `VITE_FUNCTIONS_REGION` | `asia-southeast1` |
+| `VITE_SCHOOL_API_URL` | (ไม่บังคับ) URL `/exec` ของ Apps Script ดูขั้นที่ 7 |
 
-ค่าเหล่านี้เป็น “ตัวระบุโปรเจกต์” ที่ออกแบบให้อยู่ใน Frontend ได้ ความปลอดภัยมาจาก Security Rules และ Cloud Functions
+ค่าเหล่านี้เป็น “ตัวระบุโปรเจกต์” ที่ออกแบบให้อยู่ใน Frontend ได้ ความปลอดภัยมาจาก Security Rules
 
-## 8. ตรวจสอบหลัง Deploy
-1. เปิดเว็บ → **ครู** → เข้าสู่ระบบด้วย Google (อีเมลใน TEACHER_EMAILS) → ควรเห็น Teacher Dashboard
-2. สร้างห้อง → ใช้มือถืออีกเครื่องสแกน QR เข้าร่วม → เล่น 2–3 ตา
-3. Firebase Console → Realtime Database → ควรเห็น `rooms/…`
+## 6. นำเข้าคลังการ์ดและคำถาม (ครั้งแรกครั้งเดียว)
+เฉลยไม่ได้ฝังอยู่ในเว็บ (นักเรียนเปิดดูโค้ดเว็บก็ไม่เห็นเฉลย) จึงต้องนำเข้าเองครั้งแรก
+1. ดาวน์โหลดไฟล์ [`setup/wave-content.json`](setup/wave-content.json) จาก GitHub (ปุ่ม Download raw file)
+2. เปิดเว็บ → **ครู** → เข้าสู่ระบบ Google → **Teacher Dashboard → คลังคำถาม** → **นำเข้าชุดเริ่มต้น** → เลือกไฟล์
+3. ได้การ์ดสถานการณ์ 20 ใบ + การ์ดพิเศษ 12 ใบ + คำถาม 50 ข้อ (แก้ไขต่อได้ในหน้าเดียวกัน)
 
-## ทดสอบในเครื่องด้วย Emulator (ไม่ต้องมีบัญชี ไม่มีค่าใช้จ่าย)
+## 7. (ไม่บังคับ) เข้าสู่ระบบด้วยเลขประจำตัว + PIN ผ่าน Apps Script
+1. อัปเดตไฟล์ `SoundQuest.gs` ใน Apps Script ให้เป็นเวอร์ชันล่าสุดจาก [`sound-quest/gas/SoundQuest.gs`](../sound-quest/gas/SoundQuest.gs) (มีคำสั่ง `waveLink`)
+2. Apps Script → ⚙ **การตั้งค่าโปรเจกต์ → คุณสมบัติของสคริปต์ → เพิ่ม** 3 ค่า
+   | คุณสมบัติ | ค่า |
+   |---|---|
+   | `WAVE_DB_URL` | URL ฐานข้อมูลจากขั้นที่ 3 |
+   | `WAVE_DB_SECRET` | Firebase → ⚙ Project settings → **Service accounts → Database secrets → Show** (คัดลอก) |
+   | `WAVE_API_KEY` | ค่า apiKey จากขั้นที่ 5 |
+   > `WAVE_DB_SECRET` เป็น **รหัสลับ** ใส่ใน Apps Script เท่านั้น ห้ามใส่ใน Netlify หรือ GitHub
+3. **การทำให้ใช้งานได้ → จัดการ → แก้ไข → เวอร์ชันใหม่** (URL เดิม) · ครั้งแรก Google จะขอสิทธิ์ “เชื่อมต่อบริการภายนอก” ให้กดอนุญาต
+4. ใส่ URL `/exec` ใน Netlify ที่ `VITE_SCHOOL_API_URL` · นักเรียนใช้ PIN ชุดเดิมของ SOUND QUEST และจำกัดเฉพาะ ม.5 เหมือนเดิม
+5. ถ้าต้องการบังคับทุกห้อง ให้เปิด “ต้องเข้าสู่ระบบด้วยเลขประจำตัว + PIN” ใน Game Settings
+
+## 8. ตรวจสอบหลังตั้งค่า
+1. เปิดเว็บ → **ครู** → เข้าสู่ระบบ Google → เห็นหน้าสร้างห้อง (ถ้าขึ้นว่ายังไม่ได้รับสิทธิ์ ให้ตรวจขั้นที่ 4)
+2. สร้างห้อง → มือถืออีกเครื่องสแกน QR เข้าร่วม → เล่น 2–3 ตา
+3. Firebase Console → Realtime Database → Data → ควรเห็น `rooms/…`
+
+## ทดสอบในเครื่องด้วย Emulator (สำหรับนักพัฒนา)
 ```bash
-npm ci && npm --prefix functions ci
-npm run test:integration       # Backend + Rules (17 การทดสอบ)
-npm run test:e2e               # เปิดเว็บจริง ครู 1 + นักเรียน 4 browser (23 การตรวจ)
+cd wave-adventure-online
+npm ci
+npm test                    # Unit 59 การทดสอบ
+npm run test:integration    # Security Rules + เล่นหลายเครื่อง (18 การทดสอบ)
+npm run test:e2e            # เปิดเว็บจริง ครู 1 + นักเรียน 3 browser (25 การตรวจ)
 # หรือเปิดเล่นเอง:
-npm --prefix functions run build
-npx firebase emulators:start --project demo-wave-adventure --only auth,database,functions
-npm run dev:emulator           # อีกหน้าต่าง → http://127.0.0.1:5173
+npx firebase emulators:start --project demo-wave-adventure --only auth,database
+npm run dev:emulator        # อีกหน้าต่าง → http://127.0.0.1:5173
 ```
-ในโหมด Emulator มีปุ่ม “เข้าสู่ระบบครู (ทดสอบ)” ใช้อีเมล `teacher@school.test`
+ในโหมด Emulator ต้องเพิ่ม `config/teacherEmails/teacher@school,test = true` และนำเข้า `setup/wave-content.json` ก่อน (คำสั่ง `node tests/e2e/seed.mjs` ทำให้อัตโนมัติ)

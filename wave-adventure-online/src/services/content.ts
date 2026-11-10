@@ -2,7 +2,6 @@
 import { get, ref, remove, set, update } from 'firebase/database';
 import { fb } from '../config/firebase';
 import { validateQuestion, validateSituation, validateSpecial } from '@shared/content';
-import { httpsCallable } from 'firebase/functions';
 import type { BoardConfig, ContentBundle, GameSettings, QuestionCard, SituationCard, SpecialCard } from '@shared/types';
 import { sanitizeSettings } from '@shared/rules.config';
 
@@ -10,15 +9,27 @@ const clean = <T,>(v: T): T => JSON.parse(JSON.stringify(v));
 
 export async function loadContent(): Promise<{ content: ContentBundle; seeded: boolean }> {
   const s = await get(ref(fb().db, 'content'));
-  // ชุดเริ่มต้นพร้อมเฉลยดึงจาก Backend (เฉพาะครู) ไม่ฝังไว้ใน JavaScript ของแอป
-  const def = (await httpsCallable<unknown, ContentBundle>(fb().fns, 'getDefaultContent')()).data;
-  if (!s.exists() || (!s.child('question').exists() && !s.child('situation').exists() && !s.child('special').exists())) return { content: def, seeded: false };
-  const v = s.val() as Partial<ContentBundle>;
-  return { content: { situation: v.situation || def.situation, question: v.question || def.question, special: v.special || def.special }, seeded: true };
+  const v = (s.val() || {}) as Partial<ContentBundle>;
+  const content = { situation: v.situation || {}, question: v.question || {}, special: v.special || {} };
+  return { content, seeded: !!(Object.keys(content.situation).length || Object.keys(content.question).length || Object.keys(content.special).length) };
 }
-/** บันทึกชุดข้อมูลเริ่มต้น (การ์ดต้นฉบับ + คำถาม 50 ข้อ) ลงฐานข้อมูล เพื่อเริ่มแก้ไข */
-export async function seedDefaults() {
-  await httpsCallable(fb().fns, 'seedContent')();
+
+/** นำเข้าชุดเริ่มต้น (ไฟล์ setup/wave-content.json: การ์ดต้นฉบับ + คำถาม 50 ข้อ พร้อมเฉลย)
+ *  เฉลยไม่ได้ฝังอยู่ในแอป ครูนำเข้าจากไฟล์เองครั้งเดียว · ไม่เขียนทับรายการที่มีอยู่แล้ว เว้นแต่ overwrite */
+export async function importContentBundle(raw: unknown, overwrite = false): Promise<{ added: number; errors: string[] }> {
+  const src = (raw && typeof raw === 'object' ? raw : {}) as Partial<Record<keyof ContentBundle, Record<string, unknown>>>;
+  const cur = (await loadContent()).content;
+  const up: Record<string, unknown> = {}; const errors: string[] = [];
+  const check = { question: validateQuestion, situation: validateSituation, special: validateSpecial } as const;
+  (['situation', 'question', 'special'] as const).forEach(k => Object.entries(src[k] || {}).forEach(([id, c]) => {
+    const v = check[k](c);
+    if (!v.ok) { errors.push(`${k}/${id}: ${v.error}`); return; }
+    if (!overwrite && cur[k][v.value.id]) return;
+    up[`content/${k}/${v.value.id}`] = clean(v.value);
+  }));
+  if (!Object.keys(up).length && !errors.length && !Object.keys(src).some(k => ['situation', 'question', 'special'].includes(k))) errors.push('ไฟล์ไม่ใช่ชุดการ์ดของ WAVE ADVENTURE');
+  if (Object.keys(up).length) await update(ref(fb().db), up);
+  return { added: Object.keys(up).length, errors };
 }
 
 export async function saveQuestion(raw: unknown) { const v = validateQuestion(raw); if (!v.ok) throw new Error(v.error); await set(ref(fb().db, `content/question/${v.value.id}`), clean(v.value)); return v.value; }

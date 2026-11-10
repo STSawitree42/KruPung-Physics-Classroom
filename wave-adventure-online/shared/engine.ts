@@ -2,8 +2,8 @@
    Game Engine — server-authoritative state machine
    ---------------------------------------------------------
    ฟังก์ชันทั้งหมดเป็น pure TypeScript: รับเอกสารห้อง (RoomDoc) + บริบท (เวลา, ตัวสุ่ม)
-   แล้วแก้ไขเอกสารนั้น Cloud Functions เรียกใช้ภายใน RTDB transaction
-   Client ไม่เคยเรียกฟังก์ชันเหล่านี้โดยตรง (ใช้แสดงผลเท่านั้น)
+   แล้วแก้ไขเอกสารนั้น — Host Runtime (เครื่องครู) เรียกใช้ภายใน RTDB transaction
+   เครื่องนักเรียนไม่เคยเรียกฟังก์ชันเหล่านี้ (ส่งได้แค่คำสั่งลง inbox)
 
    WAITING ─start→ ROLLING ─roll→ MOVING → (ช่องปกติ) TURN_COMPLETE → ROLLING (คนถัดไป)
                                      ├→ ช่องคลื่น  → ANSWERING ─answer→ (RESOLVING*) → TURN_COMPLETE

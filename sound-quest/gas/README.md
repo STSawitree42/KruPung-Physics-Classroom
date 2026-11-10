@@ -71,5 +71,9 @@
 - ระบบห้องเรียนออนไลน์เดิมยังเข้าด้วยเลขประจำตัวอย่างเดียว หากต้องการให้ใช้ PIN เดียวกันกับระบบเดิมด้วย สามารถพัฒนาต่อได้
 
 ## ใช้ร่วมกับ WAVE ADVENTURE ONLINE
-`SoundQuest.gs` เวอร์ชันล่าสุดมีคำสั่ง `verify` ให้ Cloud Functions ของเกม WAVE ADVENTURE ONLINE ตรวจเลขประจำตัว + PIN (ชุดเดียวกับ SOUND QUEST, จำกัด ม.5 เหมือนกัน) โดยไม่สร้าง token ใหม่
-หลังวางโค้ดใหม่ให้ทำ **การทำให้ใช้งานได้ → จัดการ → แก้ไข → เวอร์ชันใหม่** (URL เดิม) แล้วใส่ URL นี้ใน `SCHOOL_API_URL` ตาม `wave-adventure-online/FIREBASE_SETUP.md`
+`SoundQuest.gs` เวอร์ชันล่าสุดมีคำสั่ง `waveLink` ให้เกม WAVE ADVENTURE ONLINE (Firebase แพ็กเกจฟรี) ตรวจเลขประจำตัว + PIN ชุดเดียวกับ SOUND QUEST (จำกัด ม.5 เหมือนกัน) แล้วบันทึกว่าบัญชีเกมนั้นเป็นของนักเรียนคนไหน
+1. วางโค้ดใหม่ → ⚙ การตั้งค่าโปรเจกต์ → **คุณสมบัติของสคริปต์** เพิ่ม `WAVE_DB_URL`, `WAVE_DB_SECRET`, `WAVE_API_KEY` (วิธีหาค่าดู `wave-adventure-online/FIREBASE_SETUP.md` ข้อ 7)
+2. **การทำให้ใช้งานได้ → จัดการ → แก้ไข → เวอร์ชันใหม่** (URL เดิม) · Google จะขออนุญาต “เชื่อมต่อบริการภายนอก” เพิ่ม ให้กดอนุญาต
+3. ใส่ URL `/exec` ใน Netlify ของเกม WAVE ที่ `VITE_SCHOOL_API_URL`
+
+`WAVE_DB_SECRET` เป็นรหัสลับ เก็บใน Apps Script เท่านั้น นักเรียนมองไม่เห็น

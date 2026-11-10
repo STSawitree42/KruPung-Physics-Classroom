@@ -11,7 +11,7 @@ export default defineConfig({
     chunkSizeWarningLimit: 900,
     rollupOptions: {
       output: {
-        manualChunks: { firebase: ['firebase/app', 'firebase/auth', 'firebase/database', 'firebase/functions'], katex: ['katex'], motion: ['motion/react'] }
+        manualChunks: { firebase: ['firebase/app', 'firebase/auth', 'firebase/database'], katex: ['katex'], motion: ['motion/react'] }
       }
     }
   },
