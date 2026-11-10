@@ -62,3 +62,11 @@ window.addEventListener('message', e => {
 เกม Science Adventure 8 ด่าน (คำถาม 102 ข้อ + ภารกิจทดลองแบบโต้ตอบ 13 ภารกิจ) พร้อมระบบ XP เหรียญรางวัล คำใบ้ และปลดล็อกด่าน
 พร้อม Deploy บน Netlify: ลากโฟลเดอร์ `sound-quest` ไปที่ https://app.netlify.com/drop หรือเชื่อม repo โดยตั้ง Base directory = `sound-quest`
 รายละเอียดทั้งหมดอยู่ที่ [`sound-quest/README.md`](sound-quest/README.md)
+
+---
+
+## 🌊 WAVE ADVENTURE ONLINE: การผจญภัยในโลกคลื่น (โฟลเดอร์ `wave-adventure-online/`)
+
+บอร์ดเกมฟิสิกส์ออนไลน์หลายผู้เล่น เรื่องคลื่นกล ม.5 (ดัดแปลงจากบอร์ดเกมต้นฉบับ) ครูเปิดห้อง + QR นักเรียนเล่นเป็นกลุ่มผ่านมือถือ
+React + TypeScript + Firebase (เซิร์ฟเวอร์ตัดสินลูกเต๋า/คะแนน) · Teacher Dashboard · คลังคำถาม 50 ข้อ · ส่งออก CSV · PWA
+เริ่มอ่านที่ [`wave-adventure-online/README.md`](wave-adventure-online/README.md) → ตั้งค่าตาม `FIREBASE_SETUP.md` และ `DEPLOYMENT_GUIDE.md`
