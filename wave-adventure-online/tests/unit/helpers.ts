@@ -1,7 +1,7 @@
 import { createRoomDoc, addPlayer, setReady, startGame, type Ctx } from '../../shared/engine';
 import { DEFAULT_SETTINGS, sanitizeSettings } from '../../shared/rules.config';
 import { DEFAULT_BOARD } from '../../shared/board.config';
-import { defaultContent } from '../../shared/content';
+import { defaultContent } from '../../shared/defaults';
 import type { GameSettings, RoomDoc } from '../../shared/types';
 
 /** RNG ที่คุมผลลูกเต๋าได้: ใส่ค่าแต้ม 1–6 ที่ต้องการตามลำดับ (ค่าที่ไม่ใช่แต้มใช้ 0.5) */

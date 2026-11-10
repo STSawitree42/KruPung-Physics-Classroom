@@ -96,11 +96,3 @@ export const SITUATION_CARDS: SituationCard[] = [
     answers: [[T, E]],
     explanation: 'พลังงานไฟฟ้าและสัญญาณที่ส่งไปตามสายไฟถูกนำพาโดยสนามไฟฟ้าและสนามแม่เหล็กรอบสายไฟ ซึ่งเป็นคลื่นแม่เหล็กไฟฟ้า (ตามขวาง) ตามแผ่นเฉลย' }
 ];
-
-export const WAVE_TYPE_LABEL: Record<string, { th: string; en: string; image: string }> = {
-  mechanical: { th: 'คลื่นกล', en: 'Mechanical Wave', image: '/assets/cards/types/mechanical.webp' },
-  electromagnetic: { th: 'คลื่นแม่เหล็กไฟฟ้า', en: 'Electromagnetic Wave', image: '/assets/cards/types/electromagnetic.webp' },
-  transverse: { th: 'คลื่นตามขวาง', en: 'Transverse Wave', image: '/assets/cards/types/transverse.webp' },
-  longitudinal: { th: 'คลื่นตามยาว', en: 'Longitudinal Wave', image: '/assets/cards/types/longitudinal.webp' }
-};
-export const WAVE_TYPES = ['mechanical', 'electromagnetic', 'transverse', 'longitudinal'] as const;

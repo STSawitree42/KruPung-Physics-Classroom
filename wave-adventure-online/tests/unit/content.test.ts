@@ -2,7 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { QUESTION_CARDS, QUESTION_CATEGORIES } from '../../shared/data/questions';
 import { SITUATION_CARDS } from '../../shared/data/situationCards';
 import { SPECIAL_CARDS } from '../../shared/data/specialCards';
-import { gradeSituation, sanitizeContent, validateQuestion, validateSpecial, defaultContent, publicWaveCard } from '../../shared/content';
+import { gradeSituation, sanitizeContent, validateQuestion, validateSpecial, publicWaveCard } from '../../shared/content';
+import { defaultContent } from '../../shared/defaults';
 import { DEFAULT_BOARD, validateBoard, emptyBoard } from '../../shared/board.config';
 import { sanitizeSettings, DEFAULT_SETTINGS } from '../../shared/rules.config';
 

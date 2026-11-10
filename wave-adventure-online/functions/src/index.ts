@@ -15,7 +15,8 @@ import { randomInt, randomUUID } from 'node:crypto';
 
 import * as E from '../../shared/engine';
 import { DEFAULT_BOARD, validateBoard } from '../../shared/board.config';
-import { defaultContent, sanitizeContent } from '../../shared/content';
+import { sanitizeContent } from '../../shared/content';
+import { defaultContent } from '../../shared/defaults';
 import { sanitizeSettings, AVATARS, TOKEN_COLORS, CODE_ALPHABET } from '../../shared/rules.config';
 import type { BoardConfig, ContentBundle, RoomDoc, AnswerRecord } from '../../shared/types';
 
@@ -319,4 +320,20 @@ export const rematch = callable(async (req, uid) => {
     [`rooms/${roomId}/public/rematch`]: { roomId: newId, code }
   });
   return { roomId: newId, code };
+});
+
+/* =========================================================
+   Teacher content (ชุดเริ่มต้นพร้อมเฉลย ส่งให้ครูเท่านั้น)
+   ========================================================= */
+export const getDefaultContent = callable(async req => { requireTeacher(req); return defaultContent(); });
+
+/** บันทึกชุดเริ่มต้น (การ์ดต้นฉบับ + คำถาม 50 ข้อ) ลงฐานข้อมูล เฉพาะรายการที่ยังไม่มี */
+export const seedContent = callable(async req => {
+  requireTeacher(req);
+  const def = defaultContent();
+  const cur = ((await db().ref('content').get()).val() || {}) as Partial<ContentBundle>;
+  const up: Record<string, unknown> = {};
+  (['situation', 'question', 'special'] as const).forEach(k => Object.values(def[k]).forEach(c => { if (!cur[k]?.[c.id]) up[`content/${k}/${c.id}`] = clean(c); }));
+  if (Object.keys(up).length) await db().ref().update(up);
+  return { added: Object.keys(up).length };
 });

@@ -3,7 +3,7 @@ import { addPlayer, answer, choose, markRequest, pauseGame, resumeGame, removePl
 import { room, started, rigged, placeFor, firstOf } from './helpers';
 import { sanitizeSettings } from '../../shared/rules.config';
 import { DEFAULT_BOARD } from '../../shared/board.config';
-import { defaultContent } from '../../shared/content';
+import { defaultContent } from '../../shared/defaults';
 import type { RoomDoc } from '../../shared/types';
 
 const errCode = (fn: () => unknown) => { try { fn(); } catch (e) { return (e as EngineError).code; } return null; };

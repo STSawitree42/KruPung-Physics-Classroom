@@ -189,4 +189,4 @@ export const QUESTION_CARDS: QuestionCard[] = RAW.map((r, i) => ({
   enabled: true
 }));
 
-export const QUESTION_CATEGORIES = Object.values(C);
+export { QUESTION_CATEGORIES } from '../waveTypes';

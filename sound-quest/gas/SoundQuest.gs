@@ -60,6 +60,7 @@ function doPost(e) {
 function sqHandle_(req) {
   switch (req.action) {
     case 'login': return sqLogin_(req.studentId, req.pin);
+    case 'verify': return sqVerify_(req.studentId, req.pin);   // ใช้กับเกม WAVE ADVENTURE ONLINE (ตรวจตัวตนอย่างเดียว)
     case 'sync': return sqSync_(req.token, req.profile, req.events);
     case 'logout': CacheService.getScriptCache().remove('SQ_' + str_(req.token)); return { ok: true };
     case 'ping': return { ok: true, app: 'soundquest' };
@@ -99,6 +100,13 @@ function sqLogin_(studentId, pin) {
     student: { studentId: sid, name: str_(st.name), classroom: str_(st.classroom), number: str_(st.number) },
     profile: profile
   };
+}
+
+/** ตรวจเลขประจำตัว + PIN อย่างเดียว (ไม่สร้าง token และไม่ส่งข้อมูลความคืบหน้า) — ใช้กับเกมอื่นของครู */
+function sqVerify_(studentId, pin) {
+  var r = sqLogin_(studentId, pin);
+  CacheService.getScriptCache().remove('SQ_' + r.token);
+  return { ok: true, student: r.student };
 }
 
 function sqAuth_(token) {

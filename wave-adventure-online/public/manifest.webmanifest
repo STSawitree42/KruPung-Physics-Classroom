@@ -1,0 +1,18 @@
+{
+  "name": "WAVE ADVENTURE ONLINE — การผจญภัยในโลกคลื่น",
+  "short_name": "Wave Adventure",
+  "description": "บอร์ดเกมฟิสิกส์ออนไลน์หลายผู้เล่น เรื่องคลื่นกล ม.5",
+  "lang": "th",
+  "start_url": "/#/home",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#06142B",
+  "theme_color": "#06142B",
+  "categories": ["education", "games"],
+  "icons": [
+    { "src": "/assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/assets/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

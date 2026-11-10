@@ -2,16 +2,8 @@
    Content helpers: validation, defaults, public views (no answers)
    ========================================================= */
 import type { ContentBundle, Effect, QuestionCard, SituationCard, SpecialCard, WaveType, PublicCard, Verdict } from './types';
-import { SITUATION_CARDS } from './data/situationCards';
-import { SPECIAL_CARDS } from './data/specialCards';
-import { QUESTION_CARDS } from './data/questions';
 
 export const WAVE_TYPE_SET: WaveType[] = ['mechanical', 'electromagnetic', 'transverse', 'longitudinal'];
-
-export function defaultContent(): ContentBundle {
-  const byId = <T extends { id: string }>(a: T[]) => Object.fromEntries(a.map(x => [x.id, structuredClone(x)])) as Record<string, T>;
-  return { situation: byId(SITUATION_CARDS), question: byId(QUESTION_CARDS), special: byId(SPECIAL_CARDS) };
-}
 
 const str = (v: unknown, max: number) => typeof v === 'string' ? v.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, '').trim().slice(0, max) : '';
 const isId = (v: unknown) => typeof v === 'string' && /^[A-Za-z0-9_-]{1,40}$/.test(v);
