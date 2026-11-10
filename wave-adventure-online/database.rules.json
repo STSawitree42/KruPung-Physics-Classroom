@@ -1,0 +1,93 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "rooms": {
+      "$rid": {
+        "public": {
+          ".read": "auth != null && (root.child('rooms').child($rid).child('members').child(auth.uid).exists() || root.child('rooms').child($rid).child('public/hostUid').val() === auth.uid)"
+        },
+        "members": {
+          "$uid": { ".read": "auth != null && auth.uid === $uid" }
+        }
+      }
+    },
+
+    "presence": {
+      "$rid": {
+        ".read": "auth != null && (root.child('rooms').child($rid).child('members').child(auth.uid).exists() || root.child('rooms').child($rid).child('public/hostUid').val() === auth.uid)",
+        "$uid": {
+          ".write": "auth != null && auth.uid === $uid && (root.child('rooms').child($rid).child('members').child(auth.uid).exists() || root.child('rooms').child($rid).child('public/hostUid').val() === auth.uid)",
+          ".validate": "!newData.exists() || (newData.hasChildren(['online', 't']) && newData.child('online').isBoolean() && newData.child('t').isNumber())",
+          "online": { ".validate": true },
+          "t": { ".validate": true },
+          "$other": { ".validate": false }
+        }
+      }
+    },
+
+    "roomAnswers": {
+      "$rid": { ".read": "auth != null && root.child('rooms').child($rid).child('public/hostUid').val() === auth.uid" }
+    },
+    "results": {
+      "$rid": { ".read": "auth != null && root.child('results').child($rid).child('hostUid').val() === auth.uid" }
+    },
+    "teacherRooms": {
+      "$uid": { ".read": "auth != null && auth.uid === $uid" }
+    },
+    "teachers": {
+      "$uid": { ".read": "auth != null && auth.uid === $uid" }
+    },
+
+    "config": {
+      "board": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.token.teacher === true",
+        ".validate": "newData.hasChildren(['id', 'name', 'image', 'aspect', 'cells']) && newData.child('image').isString() && newData.child('image').val().length < 300 && newData.child('aspect').isNumber() && newData.child('aspect').val() > 0.2 && newData.child('aspect').val() < 5",
+        "id": { ".validate": "newData.isString() && newData.val().length <= 60" },
+        "name": { ".validate": "newData.isString() && newData.val().length <= 80" },
+        "image": { ".validate": true },
+        "aspect": { ".validate": true },
+        "updatedAt": { ".validate": "newData.isNumber()" },
+        "cells": {
+          "$i": {
+            ".validate": "$i.matches(/^[0-9]{1,3}$/) && newData.hasChildren(['index', 'type']) && newData.child('index').isNumber() && newData.child('type').val().matches(/^(START|NORMAL|WAVE|LIGHTNING|FINISH)$/)",
+            "index": { ".validate": true },
+            "type": { ".validate": true },
+            "x": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1" },
+            "y": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1" },
+            "color": { ".validate": "newData.isString() && newData.val().matches(/^(blue|purple)$/)" },
+            "$other": { ".validate": false }
+          }
+        },
+        "$other": { ".validate": false }
+      }
+    },
+
+    "content": {
+      ".read": "auth != null && auth.token.teacher === true",
+      "question": {
+        "$id": {
+          ".write": "auth != null && auth.token.teacher === true",
+          ".validate": "$id.matches(/^[A-Za-z0-9_-]{1,40}$/) && newData.hasChildren(['id', 'text', 'choices', 'answer', 'points']) && newData.child('id').val() === $id && newData.child('text').isString() && newData.child('text').val().length <= 1000 && newData.child('answer').isNumber() && newData.child('answer').val() >= 0 && newData.child('answer').val() <= 3 && newData.child('points').isNumber() && newData.child('points').val() >= 0 && newData.child('points').val() <= 100"
+        }
+      },
+      "situation": {
+        "$id": {
+          ".write": "auth != null && auth.token.teacher === true",
+          ".validate": "$id.matches(/^[A-Za-z0-9_-]{1,40}$/) && newData.hasChildren(['id', 'title', 'text', 'answers', 'points']) && newData.child('id').val() === $id && newData.child('text').isString() && newData.child('text').val().length <= 600 && newData.child('points').isNumber() && newData.child('points').val() >= 0 && newData.child('points').val() <= 100"
+        }
+      },
+      "special": {
+        "$id": {
+          ".write": "auth != null && auth.token.teacher === true",
+          ".validate": "$id.matches(/^[A-Za-z0-9_-]{1,40}$/) && newData.hasChildren(['id', 'title', 'text', 'type', 'effect']) && newData.child('id').val() === $id && newData.child('type').val().matches(/^(REWARD|PENALTY|SITUATION|GOOD_DEED)$/) && newData.child('text').isString() && newData.child('text').val().length <= 600"
+        }
+      },
+      "defaults": {
+        ".write": "auth != null && auth.token.teacher === true"
+      }
+    }
+  }
+}
