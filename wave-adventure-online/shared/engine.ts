@@ -27,6 +27,15 @@ function fail(code: EngineError['code'], msg: string): never { throw new EngineE
 export interface Ctx { now: number; rng: () => number; }
 export const rollDie = (ctx: Ctx) => 1 + Math.floor(ctx.rng() * 6);
 
+/** เวลาแอนิเมชันบนหน้าจอ (ลูกเต๋าหมุน + เดินทีละช่อง + พัก) — การ์ดเปิดหลังจากนี้ จึงบวกเวลาตอบคืนให้ */
+export const ANIM = { diceMs: 900, stepMs: 320, settleMs: 500 } as const;
+export const moveAnimationMs = (mv: Pick<MoveInfo, 'kind' | 'dice' | 'path'> | null | undefined) =>
+  mv ? (mv.kind === 'dice' || mv.dice?.length ? ANIM.diceMs : 0) + ANIM.stepMs * (mv.path?.length || 0) + ANIM.settleMs : 0;
+const answerDeadline = (doc: RoomDoc, uid: string, ctx: Ctx) => {
+  const mv = doc.public.turn.move;
+  return ctx.now + doc.public.settings.answerSeconds * 1000 + (mv && mv.playerId === uid ? moveAnimationMs(mv) : 0);
+};
+
 const MAX_LOG = 60;
 const MAX_PROCESSED = 300;
 
@@ -234,7 +243,7 @@ function drawWave(doc: RoomDoc, uid: string, ctx: Ctx) {
   doc.secret.current = { cardId: ref!, deck: 'wave' };
   pub.turn.card = publicWaveCard(card, teamwork);
   pub.turn.awaiting = 'answer';
-  pub.turn.deadline = ctx.now + pub.settings.answerSeconds * 1000;
+  pub.turn.deadline = answerDeadline(doc, uid, ctx);
   pub.turn.pendingSelection = null; pub.turn.suggestedVerdict = null;
   pub.phase = 'ANSWERING';
   pub.turn.seq++;
@@ -326,7 +335,7 @@ function drawSpecial(doc: RoomDoc, uid: string, ctx: Ctx) {
   const choice = resolveChoiceOptions(doc, uid, card);
   if (choice) {
     pub.turn.card = publicSpecialCard(card, choice.map(o => o.label));
-    pub.turn.awaiting = 'choice'; pub.turn.deadline = ctx.now + pub.settings.answerSeconds * 1000;
+    pub.turn.awaiting = 'choice'; pub.turn.deadline = answerDeadline(doc, uid, ctx);
     pub.phase = 'CARD_PENDING';
     return;
   }

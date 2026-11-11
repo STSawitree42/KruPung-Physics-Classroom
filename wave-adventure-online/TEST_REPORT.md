@@ -10,7 +10,7 @@
 |---|---|---|
 | Unit (Vitest + React Testing Library) | `npm test` | ✅ **59/59** (engine 35 · content 14 · commands 7 · components 3) |
 | Integration (Emulator, ครู 1 + นักเรียน 4 + บัญชีเพิ่มเติม) | `npm run test:integration` | ✅ **18/18** |
-| E2E (เปิดเว็บจริง: ครู 1 + นักเรียน 3 กลุ่ม (1 กลุ่มจอมือถือ) + ผู้เยี่ยมชม) | `npm run test:e2e` | ✅ **25/25** |
+| E2E (เปิดเว็บจริง: ครู 1 + นักเรียน 3 กลุ่ม (1 กลุ่มจอมือถือ) + ผู้เยี่ยมชม) | `npm run test:e2e` | ✅ **29/29** |
 | Apps Script (`SoundQuest.gs` คำสั่ง login / verify / waveLink) | ชุดจำลองบริการ Google | ✅ ผ่าน (PIN ผิด, ม.4, token ปลอม, ไม่ได้ตั้งค่า) |
 | TypeScript | `npm run typecheck` / `npm run build` | ✅ ไม่มี error |
 | ESLint | `npm run lint` | ✅ ไม่มี error/warning |
@@ -29,7 +29,7 @@
 | 5 | เฉพาะผู้เล่นที่ถึงตาทอยลูกเต๋าได้ | Integration | ✅ |
 | 6 | ลูกเต๋าสุ่มที่เครื่องครู/Host (crypto RNG) ไม่ใช่เครื่องนักเรียน ผลตรงกันทุกเครื่อง | Integration + E2E (คะแนน 4 เครื่องตรงกัน) | ✅ |
 | 7 | ตัวเดินเคลื่อนตามแต้มบนพิกัดกระดานจริง | Integration + Unit | ✅ |
-| 8 | ช่องคลื่นเปิดการ์ด/คำถามถูกต้อง (ไม่ส่งเฉลยมาก่อน) | Integration + E2E | ✅ |
+| 8 | ช่องคลื่นเปิดการ์ด/คำถามถูกต้อง (ไม่ส่งเฉลยมาก่อน) · การ์ดเปิดหลังลูกเต๋าและตัวเดินหยุด · เห็นเฉพาะครูและกลุ่มที่ถึงตา · ครูปิด/เปิดการ์ดได้ | Integration + E2E | ✅ |
 | 9 | นักเรียนแก้คะแนน/ตำแหน่ง/ลูกเต๋าเอง หรือส่งคำสั่งในนามคนอื่นไม่ได้ | Integration (Security Rules) | ✅ |
 | 10 | ตอบถูกได้คะแนนตามกติกา | Integration + Unit | ✅ |
 | 11 | ส่งคำตอบซ้ำไม่ได้คะแนนซ้ำ (requestId + state machine) | Integration + Unit | ✅ |

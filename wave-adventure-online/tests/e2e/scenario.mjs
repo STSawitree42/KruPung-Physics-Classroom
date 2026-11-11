@@ -86,7 +86,8 @@ try {
   /* ---------- play turns ---------- */
   const closeReveal = async p => { const d = p.getByRole('dialog', { name: 'ผลการตอบ' }); if (await d.isVisible().catch(() => false)) await d.getByRole('button', { name: 'ปิด', exact: true }).last().click().catch(() => {}); };
   let shots = { card: false, special: false, board: false, mobileBoard: false }, rolls = 0, answered = 0, specials = 0;
-  for (let turn = 0; turn < 30; turn++) {
+  let cardSeenBy = [], earlyCard = false, hostToggle = null;
+  for (let turn = 0; turn < 45; turn++) {
     await sleep(700);
     try {
     for (const p of [...students, teacher]) await closeReveal(p);
@@ -94,6 +95,22 @@ try {
     for (const p of students) { const b = p.locator('button:has-text("ทอยลูกเต๋า"):visible'); if (await b.count() && await b.first().isEnabled()) who.push(p); }
     const dialogs = await Promise.all(students.map(p => p.getByRole('dialog', { name: 'การ์ด' }).isVisible().catch(() => false)));
     if (dialogs.some(Boolean)) {
+      cardSeenBy.push(dialogs.filter(Boolean).length);
+      if (dialogs.filter(Boolean).length === 1 && hostToggle === null) {
+        // อื่น ๆ เห็นกระดาน + แถบสถานะ · ครูปิดการ์ดเพื่อดูกระดาน แล้วเปิดใหม่ได้
+        const other = students[dialogs.indexOf(false)];
+        const otherSeesStatus = await other.getByRole('status').filter({ hasText: /กำลัง|รอครู/ }).first().isVisible().catch(() => false);
+        const tCard = teacher.getByRole('dialog', { name: 'การ์ด' });
+        let closed = false, reopened = false;
+        if (await tCard.isVisible().catch(() => false)) {
+          await tCard.getByRole('button', { name: 'ปิด' }).first().click({ timeout: 4000 });
+          await sleep(300);
+          closed = !(await tCard.isVisible().catch(() => false)) && await teacher.locator('[aria-label="กระดานเกม"]').isVisible();
+          await teacher.getByRole('button', { name: 'เปิดการ์ด' }).click({ timeout: 4000 });
+          reopened = await tCard.isVisible().catch(() => false);
+        }
+        hostToggle = { otherSeesStatus, closed, reopened };
+      }
       // someone has a card open: the owner answers
       for (const p of students) {
         const d = p.getByRole('dialog', { name: 'การ์ด' });
@@ -118,7 +135,9 @@ try {
     if (who.length === 1) {
       const p = who[0];
       await p.locator('button:has-text("ทอยลูกเต๋า"):visible').first().click({ timeout: 4000 }); rolls++;
-      await sleep(2200);
+      await sleep(250);
+      if (await p.getByRole('dialog', { name: 'การ์ด' }).isVisible().catch(() => false)) earlyCard = true;   // การ์ดต้องรอให้ลูกเต๋า+ตัวเดินจบก่อน
+      await sleep(3200);
       if (!shots.board && p.label === 's1') { await p.screenshot({ path: `${OUT}/03-board-desktop.png` }); shots.board = true; }
       if (!shots.mobileBoard && p.label === 's3-mobile') { await p.screenshot({ path: `${OUT}/06-board-mobile.png` }); shots.mobileBoard = true; }
     }
@@ -128,6 +147,10 @@ try {
   }
   check('dice rolled through the UI', rolls >= 5, `${rolls} rolls, ${answered} answers, ${specials} special choices`);
   check('TEST 8 (E2E): wave cards were answered through the UI', answered >= 1);
+  check('a card is shown only on the current player\'s device (others keep the board)', cardSeenBy.length > 0 && cardSeenBy.every(n => n === 1), cardSeenBy.join(','));
+  check('the card opens only after the dice and token movement finish', !earlyCard);
+  check('other groups see a status line instead of the card', !!hostToggle?.otherSeesStatus);
+  check('teacher can close the card to view the board and reopen it', !!hostToggle?.closed && !!hostToggle?.reopened, JSON.stringify(hostToggle));
 
   /* ---------- clean board screenshots (no dialogs) ---------- */
   await sleep(1200);

@@ -12,6 +12,7 @@ import { Board, Countdown, Dice, FlipCard, LogFeed, RevealPanel, Scoreboard, Wav
 import { Latex, Loading, Modal, QR, avatarEmoji, go, useToast } from '../components/ui';
 import { sfx } from '../game/sound';
 import { downloadCsv } from '../utils/csv';
+import { ANIM, moveAnimationMs } from '@shared/engine';
 
 export default function RoomPage({ roomId, asHost }: { roomId: string; asHost?: boolean }) {
   const { user, ready } = useAuthUser();
@@ -139,32 +140,54 @@ function GameView({ room, uid, isHost, presence }: { room: RoomPublic; uid: stri
     if (current.id === uid) sfx.turn();
     const t = setTimeout(() => setBanner(null), 1600); return () => clearTimeout(t);
   }, [current, uid]);
-  // ---- show the result of the last resolved card on every device ----
+  // ---- dice animation + token walk: the card opens only after both finish ----
+  const lastMoveSeq = useRef<number | null>(turn.move?.seq ?? null);
+  const [moving, setMoving] = useState(false);
+  const moveTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  useEffect(() => () => moveTimers.current.forEach(clearTimeout), []);
+  const moveSeq = turn.move?.seq ?? null;
+  useEffect(() => {
+    const mv = turn.move;
+    if (!mv || mv.seq === lastMoveSeq.current) return;
+    lastMoveSeq.current = mv.seq;
+    moveTimers.current.forEach(clearTimeout); moveTimers.current = [];
+    const diced = mv.kind === 'dice' || !!mv.dice?.length;
+    if (mv.dice?.length) setLastDice(mv.dice[mv.dice.length - 1]);
+    if (diced) { setRolling(true); sfx.dice(); moveTimers.current.push(setTimeout(() => setRolling(false), ANIM.diceMs)); }
+    // ลูกเต๋าหมุน → ตัวเดินเดินทีละช่อง (ANIM.stepMs ต่อช่อง ตรงกับ Board) → พักสั้น ๆ → เปิดการ์ด
+    const wait = moveAnimationMs(mv);
+    setMoving(true);
+    moveTimers.current.push(setTimeout(() => setMoving(false), wait));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [moveSeq]);
+  // ---- result of the last resolved card: full panel for the player + teacher, short notice for others ----
   const lastCardSeq = useRef<number | null>(room.lastCard?.seq ?? null);
+  const lastCardKey = room.lastCard?.seq ?? null;
   useEffect(() => {
     const lc = room.lastCard;
     if (!lc || lc.seq === lastCardSeq.current) return;
     lastCardSeq.current = lc.seq;
-    setReveal(lc);
     const v = lc.reveal?.verdict;
     if (lc.kind === 'special') sfx.special(); else if (v === 'full') sfx.correct(); else if (v === 'partial') sfx.partial(); else sfx.wrong();
-    const t = setTimeout(() => setReveal(r => (r && r.seq === lc.seq ? null : r)), 9000); return () => clearTimeout(t);
-  }, [room.lastCard]);
-  // ---- dice animation from server result ----
-  const lastDiceSeq = useRef<number | null>(turn.move?.seq ?? null);
-  useEffect(() => {
-    const mv = turn.move;
-    if (!mv || mv.seq === lastDiceSeq.current) return;
-    lastDiceSeq.current = mv.seq;
-    if (mv.dice?.length) setLastDice(mv.dice[mv.dice.length - 1]);
-    if (mv.kind === 'dice' || mv.dice?.length) { setRolling(true); sfx.dice(); const t = setTimeout(() => setRolling(false), 650); return () => clearTimeout(t); }
-  }, [turn.move]);
+    if (isHost || lc.playerId === uid) { setReveal(lc); return; }
+    const name = room.players[lc.playerId]?.name || '';
+    const pts = lc.reveal?.points;
+    const msg = lc.kind === 'special' ? `${name} เปิดการ์ดพิเศษ: ${lc.title}` : `${name} ${v === 'full' ? 'ตอบถูกทั้งหมด' : v === 'partial' ? 'ตอบถูกบางส่วน' : 'ตอบไม่ถูก'}${pts ? ` (+${pts})` : ''}`;
+    toast(msg, v === 'wrong' ? 'bad' : 'good');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastCardKey]);
+  useEffect(() => { if (!reveal) return; const seq = reveal.seq; const t = setTimeout(() => setReveal(r => (r && r.seq === seq ? null : r)), 9000); return () => clearTimeout(t); }, [reveal]);
   // การหมดเวลาตอบ/หมดเวลาเกม ตรวจโดยเครื่องครู (Host Runtime) ตามเวลาเซิร์ฟเวอร์
 
   const run = async (fn: () => Promise<unknown>) => { if (busy) return; setBusy(true); try { await fn(); } catch (e) { toast((e as Error).message, 'bad'); } finally { setBusy(false); } };
   const doRoll = () => run(async () => { setRolling(true); sfx.dice(); try { await api.roll(room.id); } finally { setTimeout(() => setRolling(false), 400); } });
 
   const cardOpen = !!turn.card && !turn.card.reveal && (turn.awaiting === 'answer' || turn.awaiting === 'choice' || turn.awaiting === 'teacher');
+  // หน้าการ์ดแสดงเฉพาะครูและกลุ่มที่ถึงตา · กลุ่มอื่นดูกระดาน · ครูปิดการ์ดเพื่อดูกระดานแล้วเปิดใหม่ได้
+  const cardKey = cardOpen ? `${turn.seq}:${turn.card!.id}` : null;
+  const [hostHidden, setHostHidden] = useState<string | null>(null);
+  const canSeeCard = myTurn || isHost;
+  const showCard = cardOpen && !moving && canSeeCard && !(isHost && hostHidden === cardKey);
   const fin = room.board.cells.length - 1;
   const gameLeft = room.endsAt ? Math.max(0, Math.ceil((room.endsAt - (Date.now() + offset)) / 60000)) : null;
 
@@ -175,6 +198,12 @@ function GameView({ room, uid, isHost, presence }: { room: RoomPublic; uid: stri
         {isHost && <HostControls room={room} />}
       </div>
       {paused && <div className="glass p-3 mb-3 text-center text-gold">⏸ ครูหยุดเกมชั่วคราว</div>}
+      {cardOpen && !moving && !showCard && current && (
+        <div role="status" className="glass p-3 mb-3 flex flex-wrap items-center justify-center gap-3 text-center">
+          <span>🃏 <b style={{ color: current.color }}>{current.name}</b> {turn.awaiting === 'teacher' ? 'รอครูตัดสิน' : turn.card?.deck === 'special' ? 'กำลังเปิดการ์ดพิเศษ' : 'กำลังตอบการ์ด'}{turn.card?.title ? `: ${turn.card.title}` : ''}</span>
+          {isHost && <button className="btn btn-sm" onClick={() => setHostHidden(null)}>เปิดการ์ด</button>}
+        </div>
+      )}
       <div className="grid lg:grid-cols-[1fr_340px] gap-4 [&>*]:min-w-0">
         <section aria-label="กระดานเกม">
           <Board room={room} me={uid} highlight={current ? current.position : null} />
@@ -207,7 +236,7 @@ function GameView({ room, uid, isHost, presence }: { room: RoomPublic; uid: stri
       <div className="lg:hidden fixed inset-x-0 bottom-0 z-40 p-3 bg-space/90 backdrop-blur border-t border-neon/25">
         {myTurn && turn.awaiting === 'roll'
           ? <button className="btn btn-lg w-full pulse-glow" disabled={busy || paused} onClick={doRoll}><Dice5 />ทอยลูกเต๋า</button>
-          : <p className="text-center text-soft">{isHost ? 'โหมดครู: ควบคุมเกมจากปุ่มด้านบน' : myTurn ? 'ทำภารกิจในการ์ดให้เสร็จ' : `รอ ${current?.name || ''} ...`}</p>}
+          : <p className="text-center text-soft">{isHost ? 'โหมดครู: ควบคุมเกมจากปุ่มด้านบน' : myTurn ? (moving ? 'กำลังเดิน...' : 'ทำภารกิจในการ์ดให้เสร็จ') : cardOpen ? `${current?.name || ''} กำลังตอบการ์ด...` : `รอ ${current?.name || ''} ...`}</p>}
       </div>
 
       <AnimatePresence>
@@ -218,10 +247,10 @@ function GameView({ room, uid, isHost, presence }: { room: RoomPublic; uid: stri
         )}
       </AnimatePresence>
 
-      <Modal open={cardOpen} label="การ์ด">
+      <Modal open={showCard} onClose={isHost ? () => setHostHidden(cardKey) : undefined} label="การ์ด">
         {turn.card && current && <ActiveCard room={room} card={turn.card} mine={myTurn} isHost={isHost} offset={offset} />}
       </Modal>
-      <Modal open={!cardOpen && !!reveal} onClose={() => setReveal(null)} label="ผลการตอบ">
+      <Modal open={!showCard && !moving && !!reveal} onClose={() => setReveal(null)} label="ผลการตอบ">
         {reveal && <RevealPanel card={reveal} playerName={room.players[reveal.playerId]?.name || ''} />}
         <div className="text-center mt-4"><button className="btn btn-sm" onClick={() => setReveal(null)}>ปิด</button></div>
       </Modal>
