@@ -5,6 +5,7 @@ import type { PlayerState, PublicCard, RoomPublic, WaveType } from '@shared/type
 import { WAVE_TYPE_LABEL, WAVE_TYPES } from '@shared/waveTypes';
 import { Latex, Pawn, avatarEmoji } from './ui';
 import { sfx } from '../game/sound';
+import { ANIM } from '@shared/engine';
 
 /* =========================================================
    Dice (3D)
@@ -49,7 +50,7 @@ export function useAnimatedPositions(room: RoomPublic | null) {
       mv.path.forEach((cell, i) => timers.current.push(setTimeout(() => {
         setPos(p => ({ ...p, [mv.playerId]: cell })); sfx.step();
         if (i === mv.path.length - 1) animating.current = null;
-      }, 320 * (i + 1))));
+      }, ANIM.stepMs * (i + 1))));
       return;
     }
     setPos(p => { const out = { ...actual }; if (animating.current) out[animating.current] = p[animating.current]; return out; });

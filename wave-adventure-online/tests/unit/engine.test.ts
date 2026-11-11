@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { addPlayer, answer, choose, markRequest, pauseGame, resumeGame, removePlayer, roll, setReady, startGame, teacherJudge, timeout, adjustScore, applyEffect, EngineError, createRoomDoc } from '../../shared/engine';
+import { addPlayer, answer, choose, markRequest, pauseGame, resumeGame, removePlayer, roll, setReady, startGame, teacherJudge, timeout, adjustScore, applyEffect, EngineError, createRoomDoc, moveAnimationMs } from '../../shared/engine';
 import { room, started, rigged, placeFor, firstOf } from './helpers';
 import { sanitizeSettings } from '../../shared/rules.config';
 import { DEFAULT_BOARD } from '../../shared/board.config';
@@ -61,7 +61,8 @@ describe('turns, dice and movement', () => {
     expect(doc.public.turn.awaiting).toBe('answer');
     expect(doc.public.turn.card?.kind).toBe('situation');
     expect((doc.public.turn.card as unknown as Record<string, unknown>).answers).toBeUndefined();
-    expect(doc.public.turn.deadline).toBe(1_000_000 + 60_000);
+    // เวลาตอบ 60 วินาที + เวลาแอนิเมชันลูกเต๋า/เดิน (การ์ดเปิดหลังเดินเสร็จ)
+    expect(doc.public.turn.deadline).toBe(1_000_000 + 60_000 + moveAnimationMs(doc.public.turn.move));
   });
   it('clamps backwards movement at START and forward movement at FINISH (overshoot allowed)', () => {
     const { doc, ids } = started();
@@ -125,7 +126,7 @@ describe('situation cards (original rules)', () => {
   it('time out counts as wrong', () => {
     const { doc, ids } = started();
     toWave(doc, ids[0], 'S:s03');
-    const ctx = rigged(); ctx.now += 61_000;
+    const ctx = rigged(); ctx.now += 61_000 + moveAnimationMs(doc.public.turn.move);
     expect(timeout(doc, ctx)).toBe(true);
     expect(doc.public.lastCard?.reveal?.timeout).toBe(true);
     expect(doc.public.players[ids[0]].stats.wrong).toBe(1);
@@ -253,7 +254,7 @@ describe('special cards (original deck)', () => {
   it('choice timeout applies the first option', () => {
     const { doc, ids } = started();
     toSpecial(doc, ids[0], 'sp-new-knowledge');
-    const ctx = rigged(); ctx.now += 61_000;
+    const ctx = rigged(); ctx.now += 61_000 + moveAnimationMs(doc.public.turn.move);
     timeout(doc, ctx);
     expect(doc.public.players[ids[0]].score).toBe(10);
   });
